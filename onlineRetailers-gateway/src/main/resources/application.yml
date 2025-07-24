@@ -13,26 +13,10 @@ spring:
         password: nacos
     gateway:
       routes:
-        - id: hello-en
-          uri: lb://hello
+        - id: fileUpload
+          uri: lb://fileUpload
           predicates:
-            - Header=Accept-Language, en.*
-          filters:
-            - RewritePath=/hello, /en
-
-        - id: hello-zh
-          uri: lb://hello
-          predicates:
-            - Header=Accept-Language, zh.*
-          filters:
-            - RewritePath=/hello, /zh
-
-        - id: hello-jp
-          uri: lb://hello
-          predicates:
-            - Header=Accept-Language, jp.*
-          filters:
-            - RewritePath=/hello, /jp
+            - Path=/upload/**
 
         - id: idGenerator
           uri: lb://idGenerate
