@@ -1,0 +1,88 @@
+server:
+  port: 20001
+
+spring:
+  application:
+    name: res-gateway
+  cloud:
+    nacos:
+      discovery:
+        namespace: online-retailers
+        server-addr: localhost:8848
+        username: nacos
+        password: nacos
+    gateway:
+      routes:
+        - id: hello-en
+          uri: lb://hello
+          predicates:
+            - Header=Accept-Language, en.*
+          filters:
+            - RewritePath=/hello, /en
+
+        - id: hello-zh
+          uri: lb://hello
+          predicates:
+            - Header=Accept-Language, zh.*
+          filters:
+            - RewritePath=/hello, /zh
+
+        - id: hello-jp
+          uri: lb://hello
+          predicates:
+            - Header=Accept-Language, jp.*
+          filters:
+            - RewritePath=/hello, /jp
+
+        - id: idGenerator
+          uri: lb://idGenerate
+          predicates:
+            - Path=/idGenerator/**
+            - TimeLimitBetween=06:00,22:00
+          filters:
+            - StripPrefix=1
+
+        - id: test
+          uri: lb://test-consumer-service
+          predicates:
+            - Path=/test/**
+          filters:
+            - StripPrefix=1
+
+        - id: baidu
+          uri: https://www.baidu.com
+          predicates:
+            - Path=/**
+
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOriginPatterns: "*"
+            allowedMethods: "*"
+            allowedHeaders: "*"
+            allowCredentials: true
+
+# 监控
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    gateway:
+      enabled: true
+    health:
+      show-details: always
+  simple:
+    metrics:
+      export:
+        enabled: true
+
+token:
+  secret: a-string-secret-at-least-256-bits-long
+
+rights:
+  exclude-paths:  #自定义的属性，用于排除直接访问某些路径
+    - /admin/**
+    - /cust/**
+    - /back/**

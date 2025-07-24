@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: idGenerator
+  cloud:
+    nacos:
+      discovery:
+        namespace: online-retailers
+        server-addr: localhost:8848
+        username: nacos
+        password: nacos
+server:
+  port: 8181
