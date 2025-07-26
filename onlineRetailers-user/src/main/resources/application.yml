@@ -1,0 +1,46 @@
+
+
+spring:
+  application:
+    name: user
+  cloud:
+    nacos:
+      discovery:
+        namespace: online-retailers
+        server-addr: localhost:8848
+        username: nacos
+        password: nacos
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/shoppingcloud?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf8&useSSL=false
+    username: root
+    password: 2333
+  mybatis-plus:
+    type-aliases-package: com.lightning.model # 实体类包路径，MyBatis Plus 会自动扫描
+    configuration:
+      log-impl: org.apache.ibatis.logging.stdout.StdOutImpl # 打印 SQL 日志到控制台
+
+token:
+  secret: ${TOKEN_SECRET:tihu0BcbVxLBW37NXlJnBJRZ/p96Iu3okbj7JhVCM74=}
+  expiration: 2592000000 # Token 过期时间，单位毫秒 (30天)
+
+logging:
+  level:
+    # 将 Spring Security 的核心包设置为 DEBUG 级别
+    org.springframework.security: DEBUG
+    # 如果您想看更底层的 Web 过滤器日志，也可以考虑以下：
+    org.springframework.web.filter.CommonsRequestLoggingFilter: DEBUG
+    # 如果涉及到 Spring MVC 的处理细节，可以设置以下：
+    org.springframework.web.servlet.DispatcherServlet: DEBUG
+    # 如果涉及到 Spring AOP/Proxy 相关的，可以设置以下：
+    org.springframework.aop: DEBUG
+    # 如果涉及到 Spring Boot 自动配置的，可以设置以下：
+    org.springframework.boot.autoconfigure: DEBUG
+
+server:
+  port: 12000
+

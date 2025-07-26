@@ -8,5 +8,8 @@ spring:
         server-addr: localhost:8848
         username: nacos
         password: nacos
+      config:
+        import-check:
+          enabled: false
 server:
   port: 8181

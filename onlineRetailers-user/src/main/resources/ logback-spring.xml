@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<configuration scan="true">
+    <!-- 日志级别 -->
+    <property name="LOG_LEVEL" value="INFO"/>
+
+    <!-- 日志文件输出路径（自动创建） -->
+    <property name="LOG_PATH" value="logs"/>
+
+    <!-- 控制台输出 -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <!-- 每天滚动日志文件输出 -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <!-- 日志文件路径 -->
+        <file>${LOG_PATH}/app.log</file>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- 每天生成一个文件 -->
+            <fileNamePattern>${LOG_PATH}/app.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <!-- 保留30天日志 -->
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+
+    <!-- 异步封装 console 输出 -->
+    <appender name="AsyncConsole" class="ch.qos.logback.classic.AsyncAppender">
+        <discardingThreshold>0</discardingThreshold>
+        <queueSize>5000</queueSize>
+        <neverBlock>true</neverBlock>
+        <appender-ref ref="CONSOLE" />
+    </appender>
+
+    <!-- 异步封装 file 输出 -->
+    <appender name="AsyncFile" class="ch.qos.logback.classic.AsyncAppender">
+        <discardingThreshold>0</discardingThreshold>
+        <queueSize>5000</queueSize>
+        <neverBlock>true</neverBlock>
+        <appender-ref ref="FILE" />
+    </appender>
+
+    <!-- 根日志级别及输出目标 -->
+    <root level="${LOG_LEVEL}">
+        <appender-ref ref="AsyncConsole"/>
+        <appender-ref ref="AsyncFile"/>
+    </root>
+
+    <!-- 为 com.example.service 包单独设置日志级别和输出    additivity="false"不向 root 传递日志（即只输出到当前 appender，不重复输出） -->
+    <logger name="com.zy.web" level="INFO" additivity="false">
+        <appender-ref ref="AsyncConsole"/>
+        <appender-ref ref="AsyncFile"/>
+    </logger>
+
+    <!-- 为 com.example.service 包单独设置日志级别和输出    additivity="false"不向 root 传递日志（即只输出到当前 appender，不重复输出） -->
+    <logger name="org.springframework" level="ERROR" additivity="false">
+        <appender-ref ref="AsyncConsole"/>
+        <appender-ref ref="AsyncFile"/>
+    </logger>
+
+</configuration>
