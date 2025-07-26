@@ -1,0 +1,41 @@
+{
+    "code": 1,
+    "data": [
+        {
+            "id": 101,
+            "name": "精品男装",
+            "price": 100,
+            "url": "/images/man.jpg"
+        },{
+            "id": 102,
+            "name": "简约男装",
+            "price": 90,
+            "url": "/images/man.jpg"
+        },{
+            "id": 103,
+            "name": "朴素男装",
+            "price": 80,
+            "url": "/images/man.jpg"
+        },{
+            "id": 104,
+            "name": "时尚男装",
+            "price": 70,
+            "url": "/images/man.jpg"
+        },{
+            "id": 105,
+            "name": "舒适男装",
+            "price": 60,
+            "url": "/images/man.jpg"
+        },{
+            "id": 106,
+            "name": "舒适男装",
+            "price": 50,
+            "url": "/images/man.jpg"
+        },{
+            "id": 107,
+            "name": "舒适男装",
+            "price": 40,
+            "url": "/images/man.jpg"
+        }
+    ]
+}

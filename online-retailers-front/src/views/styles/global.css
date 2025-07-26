@@ -1,0 +1,16 @@
+body {
+    padding-top: 45px; /* 顶部栏高度 */
+    padding-bottom: 60px;
+    -webkit-tap-highlight-color: transparent; /* 去除点击高亮 */
+
+    /* 阻止文本选择 */
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+a {
+    text-decoration: none;
+    color: black;
+}

@@ -1,0 +1,41 @@
+{
+    "code": 1,
+    "data": [
+        {
+            "id": 301,
+            "name": "精品童装",
+            "price": 100,
+            "url": "/images/children.jpg"
+        },{
+            "id": 302,
+            "name": "简约童装",
+            "price": 90,
+            "url": "/images/children.jpg"
+        },{
+            "id": 303,
+            "name": "朴素童装",
+            "price": 80,
+            "url": "/images/children.jpg"
+        },{
+            "id": 304,
+            "name": "时尚童装",
+            "price": 70,
+            "url": "/images/children.jpg"
+        },{
+            "id": 305,
+            "name": "舒适童装",
+            "price": 60,
+            "url": "/images/children.jpg"
+        },{
+            "id": 306,
+            "name": "舒适童装",
+            "price": 50,
+            "url": "/images/children.jpg"
+        },{
+            "id": 307,
+            "name": "舒适童装",
+            "price": 40,
+            "url": "/images/children.jpg"
+        }
+    ]
+}

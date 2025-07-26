@@ -1,0 +1,42 @@
+{
+    "code": 1,
+    "data": [
+        {
+            "id": 201,
+            "name": "精品女装",
+            "price": 100,
+            "url": "/images/woman.webp"
+        },{
+            "id": 202,
+            "name": "简约女装",
+            "price": 90,
+            "url": "/images/woman.webp"
+        },{
+            "id": 203,
+            "name": "朴素女装",
+            "price": 80,
+            "url": "/images/woman.webp"
+        },{
+            "id": 204,
+            "name": "时尚女装",
+            "price": 70,
+            "url": "/images/woman.webp"
+        },{
+            "id": 205,
+
+            "name": "舒适女装",
+            "price": 60,
+            "url": "/images/woman.webp"
+        },{
+            "id": 206,
+            "name": "舒适女装",
+            "price": 50,
+            "url": "/images/woman.webp"
+        },{
+            "id": 207,
+            "name": "舒适女装",
+            "price": 40,
+            "url": "/images/woman.webp"
+        }
+    ]
+}
