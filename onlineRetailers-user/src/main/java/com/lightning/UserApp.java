@@ -9,7 +9,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 
 @EnableDiscoveryClient
 @SpringBootApplication
-@MapperScan("com.lightning.product.mapper")
+@MapperScan("com.lightning.mapper")
 @EnableFeignClients(basePackages = "com.lightning.web.api")
 public class UserApp
 {
