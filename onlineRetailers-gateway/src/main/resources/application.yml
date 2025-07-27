@@ -17,7 +17,6 @@ spring:
           uri: lb://product
           predicates:
             - Path=/product/**
-            - Method=GET,POST,PUT
 
         - id: fileUpload
           uri: lb://fileUpload

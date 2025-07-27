@@ -38,7 +38,6 @@
 </template>
 
 <script setup>
-// 导入需要的Element Plus图标（按需引入）
 import { HomeFilled, List, ShoppingCart, User } from '@element-plus/icons-vue'
 </script>
 

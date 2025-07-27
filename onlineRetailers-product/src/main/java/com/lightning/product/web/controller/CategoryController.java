@@ -17,15 +17,17 @@ import java.util.List;
  * 业务问题: ResponseResult: code, msg, data
  */
 @RestController
-@RequestMapping("/category")
+@RequestMapping("product/category")
 public class CategoryController {
 
+    public static final Integer CATEGORY_STATUS_NORMAL = 1;
     @Autowired
     private CategoryService categoryService;
 
     /**
      * 新增类别
      * POST /category
+     *
      * @param categoryDTO 待新增的类别信息
      * @return 包含新增成功后类别DTO的统一响应
      */
@@ -47,11 +49,12 @@ public class CategoryController {
     /**
      * 查询所有类别
      * GET /category/all
+     *
      * @return 包含所有类别DTO列表的统一响应
      */
     @GetMapping("/all")
     public ResponseEntity<ResponseResult> getAllCategories() {
-        List<CategoryDTO> categories = categoryService.getAllCategories(   null   );
+        List<CategoryDTO> categories = categoryService.getAllCategories(CATEGORY_STATUS_NORMAL);
         // 成功时，返回HTTP 200 OK，业务码1，并携带类别列表数据
         return ResponseEntity.ok(ResponseResult.ok("查询所有类别成功").setData(categories));
     }
@@ -59,6 +62,7 @@ public class CategoryController {
     /**
      * 设置类别状态为隐藏 (逻辑删除)
      * PUT /category/{categoryId}/{status}
+     *
      * @param categoryId 类别ID
      * @return 操作结果的统一响应
      */
@@ -78,12 +82,13 @@ public class CategoryController {
     /**
      * 更新类别信息
      * PUT /category/{categoryId}
-     * @param categoryId 类别ID
+     *
+     * @param categoryId  类别ID
      * @param categoryDTO 待更新的类别信息
      * @return 包含更新成功后类别DTO的统一响应
      */
     @PutMapping("/{categoryId}")
-    public ResponseEntity<ResponseResult> updateCategory(@PathVariable("categoryId") Long categoryId,  CategoryDTO categoryDTO) {
+    public ResponseEntity<ResponseResult> updateCategory(@PathVariable("categoryId") Long categoryId, CategoryDTO categoryDTO) {
         if (!categoryId.equals(categoryDTO.getCategoryId())) {
             // 请求路径ID与DTO中的ID不一致，返回HTTP 400 Bad Request，业务码0
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -107,6 +112,7 @@ public class CategoryController {
     /**
      * 根据ID获取类别详情
      * GET /category/{categoryId}
+     *
      * @param categoryId 类别ID
      * @return 包含类别DTO的统一响应
      */

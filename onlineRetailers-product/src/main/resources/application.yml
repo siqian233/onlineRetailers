@@ -1,6 +1,6 @@
 spring:
   application:
-    name: product-service
+    name: product
   cloud:
     nacos:
       discovery:
@@ -10,7 +10,7 @@ spring:
         password: nacos
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/online_retailers?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf8&useSSL=false
+    url: jdbc:mysql://localhost:3306/shoppingcloud?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf8&useSSL=false
     username: root
     password: 2333
 server:

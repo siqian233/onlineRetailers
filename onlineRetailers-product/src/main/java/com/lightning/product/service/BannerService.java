@@ -6,5 +6,5 @@ import java.util.List;
 
 public interface BannerService {
     BannerDTO addBanner(BannerDTO banner);
-    List<BannerDTO> getBannerByStatus(Integer status);
+    List<BannerDTO> getBannersByStatus(Integer status);
 }

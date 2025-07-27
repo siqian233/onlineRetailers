@@ -1,5 +1,7 @@
 package com.lightning.web.bean;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.web.multipart.MultipartFile;
@@ -15,7 +17,9 @@ import java.math.BigDecimal;
 public class ProductDTO implements Serializable {
     private static final long serialVersionUID = 1L;
 
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long productId; // 商品ID
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long categoryId; // 分类ID
 
     private String productDesc; // 商品描述
