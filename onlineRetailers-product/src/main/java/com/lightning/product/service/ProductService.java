@@ -3,12 +3,6 @@ package com.lightning.product.service;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.lightning.web.bean.ProductDTO;
 
-/**
- * @program: shopping147_cloud
- * @description:
- * @author: zy
- * @create: 2025-07-24 19:31
- */
 public interface ProductService {
 
     /**
@@ -17,6 +11,14 @@ public interface ProductService {
      * @return 商品DTO的分页结果
      */
     IPage<ProductDTO> listProductsPaged(ProductQueryVO queryVO);
+
+    /**
+     * 查询特价商品列表
+     * <p>特价商品定义为：当前价格price低于原价originalPrice，且商品状态为上架 (productStatus = 1),结果按商品ID降序排列</p>
+     * @param queryVO 查询参数，包含排序方式等
+     * @return 特价商品列表
+     */
+    IPage<ProductDTO> getSpecialOfferProducts(ProductQueryVO queryVO);
 
     /**
      * 上架商品 (新增商品)
@@ -47,5 +49,3 @@ public interface ProductService {
     ProductDTO getProductById(Long productId);
 
 }
-
-

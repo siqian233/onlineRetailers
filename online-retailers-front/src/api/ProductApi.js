@@ -1,32 +1,27 @@
-import {ElMessage} from "element-plus";
+import instance from '@/utils/request'
 
-// 获取轮播图（状态为1）
-export async function getBannerList() {
-    try {
-        const response = await fetch('/product/banner/status/1');
-        const data = await response.json();
-        if(data.code === 1){
-            return data.data;
-        }else{
-            ElMessage.error('轮播图请求失败');
+// 获取按分页查找所有的特价商品列表
+export const getAllDealProductList = (current, size) => {
+    return instance({
+        url: '/product/products/special-offers',
+        method: 'GET',
+        params: {
+            current,
+            size
         }
-    }catch ( error){
-        ElMessage.error('轮播图请求失败');
-    }
+    })
 }
 
-// 获取推荐分类
-export async function getCategoryList() {
-    try {
-        const response = await fetch('/product/category/all');
-        const data = await response.json();
-        if(data.code === 1){
-            return data.data;
+// 根据类别id 获取此类别下 current项，每页size条 产品数据，按产品id降序排序
+export const getProductListByCategoryId = (categoryId, current, size) => {
+    return instance({
+        url: '/product/products/page?productStatus=1',
+        method: 'GET',
+        params: {
+            categoryId,
+            current,
+            size
         }
-        else{
-            ElMessage.error('商品分类请求失败');
-        }
-    }catch ( error){
-        ElMessage.error('商品分类请求失败');
-    }
+    })
 }
+

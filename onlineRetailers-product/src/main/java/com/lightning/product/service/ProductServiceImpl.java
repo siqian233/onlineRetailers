@@ -1,6 +1,7 @@
 package com.lightning.product.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -73,6 +74,37 @@ public class ProductServiceImpl implements ProductService {
             // 默认排序
             queryWrapper.orderByDesc(Product::getProductId);
         }
+        // 执行分页查询
+        IPage<Product> productPage = productMapper.selectPage(page, queryWrapper);
+        // 将实体分页结果转换为DTO分页结果
+        return productPage.convert(product -> {
+            ProductDTO dto = new ProductDTO();
+            BeanUtils.copyProperties(product, dto);
+            // 这里可以添加从其他服务获取分类名称的逻辑，例如通过Feign调用分类服务
+            // dto.setCategoryName(categoryService.getCategoryNameById(product.getCategoryId()));
+            return dto;
+        });
+    }
+
+    /**
+     * 查询特价商品列表的实现
+     * 特价商品定义为：当前价格低于原价，且商品状态为上架 (product_status = 1)
+     * 结果按商品ID降序排列
+     *
+     * @return 特价商品列表
+     */
+    @Override
+    public IPage<ProductDTO> getSpecialOfferProducts( ProductQueryVO queryVO ) {
+        // 创建分页对象
+        Page<Product> page = new Page<>(queryVO.getCurrent(), queryVO.getSize());
+        // 使用MyBatis-Plus的QueryWrapper构建查询条件
+        QueryWrapper<Product> queryWrapper = new QueryWrapper<>();
+        // 注意：这里的"price"和"original_price"是数据库列名
+        // 修正：使用 apply 方法进行列与列之间的比较，避免将列名作为参数
+        queryWrapper.apply("price < originalprice") //    where price < original_price
+                .eq("productstatus", 1)      // product_status = 1
+                .orderByDesc("productid");   // order by product_id DESC
+
         // 执行分页查询
         IPage<Product> productPage = productMapper.selectPage(page, queryWrapper);
         // 将实体分页结果转换为DTO分页结果

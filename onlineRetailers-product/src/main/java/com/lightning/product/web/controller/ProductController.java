@@ -59,6 +59,17 @@ public class ProductController {
     }
 
     /**
+     * 获取特价商品列表
+     * @return 包含特价商品列表的ResponseEntity
+     */
+    @GetMapping("/special-offers")
+    public ResponseEntity<ResponseResult> getSpecialOfferProducts( ProductQueryVO queryVO) {
+        IPage<ProductDTO> specialOfferProducts = productService.getSpecialOfferProducts(queryVO);
+        // 即使列表为空，也认为成功，返回空列表
+        return ResponseEntity.ok(ResponseResult.ok("特价产品列表获取成功").setData(specialOfferProducts));
+    }
+
+    /**
      * 根据ID获取商品详情
      * GET /products/{productId}
      *

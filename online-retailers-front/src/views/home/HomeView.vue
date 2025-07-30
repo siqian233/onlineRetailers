@@ -22,7 +22,9 @@ import BannerView from './BannerView.vue';
 import RecommendView from './RecommendView.vue';
 import TabControl from '@/components/content/TabControl.vue';
 import GoodsList from '@/components/content/GoodsList.vue';
-import {getBannerList, getCategoryList} from "@/api/ProductApi.js";
+import {getAllBannerList} from "@/api/BannerApi.js";
+import {getAllCategoryList} from "@/api/CategoryApi.js";
+
 
 const banners = ref([]);
 const recommends = ref([]);
@@ -41,8 +43,8 @@ const tabClick = (index) => {
 
 onMounted(async () => {
   const [bannerRes, categoryRes, tabRes, manRes, womanRes, childrenRes] = await Promise.all([
-    getBannerList(),
-    getCategoryList(),
+    getAllBannerList(),
+    getAllCategoryList(),
     fetch('/tabs.json'),
     fetch('/goodsman.json'),
     fetch('/goodswoman.json'),

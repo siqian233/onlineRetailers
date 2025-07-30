@@ -6,11 +6,6 @@ const routes = [
     redirect: '/home'    // 将根路径重定向到首页
   },
   {
-    path: '/about',
-    name: 'about',
-    component: () => import('../views/AboutView.vue')
-  },
-  {
     path: '/login',
     name: 'login',
     component: () => import('../views/login/LoginView.vue'),
