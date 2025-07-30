@@ -3,10 +3,10 @@
     <div class="recommend">
         <div v-for="(item, index) in recommendData.slice(0, 4)" :key="index" class="recommend-item">
             <a href="#">
-                <img :src="item.url">
+                <el-image :src="item.icon" />
             </a>
             <div class="recommend-title">
-                <p>{{ item.title }}</p>
+                <p>{{ item.categoryName }}</p>
             </div>
         </div>
     </div>

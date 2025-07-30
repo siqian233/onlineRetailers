@@ -16,12 +16,13 @@
 
 <script setup>
 import {computed, onMounted, reactive, ref} from 'vue';
-import NavBar from '../../components/common/NavBar.vue';
-import SearchBar from '../../components/common/SearchBar.vue';
+import NavBar from '@/components/common/NavBar.vue';
+import SearchBar from '@/components/common/SearchBar.vue';
 import BannerView from './BannerView.vue';
 import RecommendView from './RecommendView.vue';
-import TabControl from '../../components/content/TabControl.vue';
-import GoodsList from '../../components/content/GoodsList.vue';
+import TabControl from '@/components/content/TabControl.vue';
+import GoodsList from '@/components/content/GoodsList.vue';
+import {getBannerList, getCategoryList} from "@/api/ProductApi.js";
 
 const banners = ref([]);
 const recommends = ref([]);
@@ -39,45 +40,20 @@ const tabClick = (index) => {
 }
 
 onMounted(async () => {
-  // const res = await fetch('/banners.json');
-  // const data = await res.json();
-  // banners.value = data.data;
-  const responseResult = await fetch('http://localhost:20001/product/banner/status/1');
-  const data = await responseResult.json();
-  if (data.code === 1) {
-    banners.value = data.data;
-  }
+  const [bannerRes, categoryRes, tabRes, manRes, womanRes, childrenRes] = await Promise.all([
+    getBannerList(),
+    getCategoryList(),
+    fetch('/tabs.json'),
+    fetch('/goodsman.json'),
+    fetch('/goodswoman.json'),
+    fetch('/goodschildren.json')
+  ]);
+
+  banners.value = bannerRes;
+  recommends.value = categoryRes;
+  tabs.value = (await tabRes.json()).data;
+  goods.man =(await manRes.json()).data;
+  goods.woman =(await womanRes.json()).data;
+  goods.children = (await childrenRes.json()).data;
 });
-
-onMounted(async () => {
-  const res = await fetch('/recommend.json');
-  const data = await res.json();
-  recommends.value = data.data;
-});
-
-onMounted(async () => {
-  const res = await fetch('/tabs.json');
-  const data = await res.json();
-  tabs.value = data.data;
-});
-
-onMounted(async () => {
-  const res = await fetch('/goodsman.json');
-  const data = await res.json();
-  goods.man = data.data;
-});
-
-onMounted(async () => {
-  const res = await fetch('/goodswoman.json');
-  const data = await res.json();
-  goods.woman = data.data;
-});
-
-onMounted(async () => {
-  const res = await fetch('/goodschildren.json');
-  const data = await res.json();
-  goods.children = data.data;
-});
-
-
 </script>
