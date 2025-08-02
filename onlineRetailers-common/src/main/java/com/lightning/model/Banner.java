@@ -6,10 +6,12 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
+
 @TableName("banner")
 @Data
 @NoArgsConstructor
-public class Banner {
+public class Banner implements Serializable {
     @TableId("bannerId")
     private Long bannerId; //  '轮播图ID',
     @TableField("imageUrl")

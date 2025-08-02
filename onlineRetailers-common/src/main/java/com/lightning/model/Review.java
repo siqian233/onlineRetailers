@@ -4,12 +4,13 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @TableName("Review")
 @Data
 @NoArgsConstructor
-public class Review {
+public class Review implements Serializable {
     private Long id ;// '评价ID',
     private Long productId ;//'商品ID',
     private Long userId ;//'用户ID',

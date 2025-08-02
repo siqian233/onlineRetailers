@@ -6,10 +6,12 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
+
 @TableName("Order_items")
 @Data
 @NoArgsConstructor
-public class OrderItems {
+public class OrderItems implements Serializable {
     @TableId("id")
     private Long id;// '订单详情id',
     @TableField("orderId")

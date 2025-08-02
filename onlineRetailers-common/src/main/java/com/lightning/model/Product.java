@@ -6,12 +6,13 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 
 @TableName("Product")
 @Data
 @NoArgsConstructor
-public class Product {
+public class Product implements Serializable {
     @TableId("productId")
     private Long productId;//'商品ID',
     @TableField("categoryId")

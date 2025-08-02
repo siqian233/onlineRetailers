@@ -6,12 +6,13 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @TableName("Orders")
 @Data
 @NoArgsConstructor
-public class Orders {
+public class Orders implements Serializable {
     @TableId("id")
     private Long id ;// '订单id',
 

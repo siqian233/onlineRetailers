@@ -6,10 +6,12 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
+
 @TableName("address")
 @Data
 @NoArgsConstructor
-public class Address {
+public class Address implements Serializable {
     @TableId("addressId")
     private Long addressId;
 
