@@ -49,7 +49,7 @@ public class BannerController {
      */
     @GetMapping("/status/{bannerStatus}")
     public ResponseEntity<ResponseResult> getBannersByStatus(
-            @PathVariable( value="bannerStatus", required = true) Integer bannerStatus) {
+            @PathVariable( value="bannerStatus") Integer bannerStatus) {
         List<BannerDTO> banners = bannerService.getBannersByStatus(bannerStatus);
 
         return ResponseEntity.ok(ResponseResult.ok("查询轮播图成功").setData(banners));

@@ -45,7 +45,7 @@ public class BannerServiceImpl implements BannerService {
         if (rr2.getCode() != 1) {
             throw new RuntimeException("轮播图图片上传失败");
         }
-        List<String> mainImages = rr2.getData();
+        List<String> mainImages = (List<String>) rr2.getData();
         bannerDTO.setImageUrl(mainImages.get(0));
 
         if (bannerDTO.getBannerStatus() == null) {
