@@ -36,4 +36,8 @@ public class ResponseResult {
         this.data = t;
         return this;
     }
+
+    public <T> T getData(){
+        return (T) this.data;
+    }
 }
