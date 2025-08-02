@@ -140,8 +140,7 @@ public class ProductServiceImpl implements ProductService {
         List<String> mainImages = (List<String>) rr2.getData();
         productDTO.setMainImage(mainImages.get(0));
 
-        MultipartFile[] subImageFiles = productDTO.getSubImageFiles();
-        ResponseResult rr3 = this.fileUploadApi.upload(subImageFiles);
+        ResponseResult rr3 = this.fileUploadApi.upload(productDTO.getSubImageFiles());
         List<String> subImages = (List<String>) rr3.getData();
         StringBuilder uploadedSubImages = new StringBuilder();
         for (String imgData : subImages) {

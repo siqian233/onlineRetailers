@@ -1,6 +1,7 @@
 package com.lightning.web.bean;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.web.multipart.MultipartFile;
@@ -21,6 +22,7 @@ public class BannerDTO  implements Serializable {
     private String title ;// '标题',
     private Integer bannerStatus;
 
+    @JsonIgnore
     private MultipartFile imageUrlFile;
 
 }

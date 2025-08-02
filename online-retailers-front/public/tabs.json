@@ -4,15 +4,15 @@
         {
             "id": 1,
             "title": "热销",
-            "name": "man"
+            "name": "deal"
         },{
             "id": 2,
             "title": "猜你喜欢",
-            "name": "woman"
+            "name": "lovely"
         },{
             "id": 3,
             "title": "特价商品",
-            "name": "children"
+            "name": "special "
         }
     ]
 }

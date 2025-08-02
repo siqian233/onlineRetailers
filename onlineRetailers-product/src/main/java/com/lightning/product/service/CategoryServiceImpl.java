@@ -9,6 +9,8 @@ import com.lightning.web.bean.CategoryDTO;
 import com.lightning.web.bean.ResponseResult;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -37,6 +39,7 @@ public class CategoryServiceImpl implements CategoryService {
      */
     @Override
     @Transactional
+    @CacheEvict(value = "categories", allEntries = true)
     public CategoryDTO addCategory(CategoryDTO categoryDTO) {
         // 1. 生成类别ID
         ResponseResult rr = this.idGeneratorApi.getNextId();
@@ -78,6 +81,7 @@ public class CategoryServiceImpl implements CategoryService {
      * @return 所有类别DTO的列表
      */
     @Override
+    @Cacheable(value = "categories", key = "#categoryStatus != null ? 'status_' + #categoryStatus : 'all'")
     public List<CategoryDTO> getAllCategories(Integer categoryStatus) {
         // 查询所有未被删除的类别 (categoryStatus = 1)
         LambdaUpdateWrapper<Category> queryWrapper = new LambdaUpdateWrapper<>();
@@ -103,6 +107,7 @@ public class CategoryServiceImpl implements CategoryService {
      */
     @Override
     @Transactional
+    @CacheEvict(value = "categories", allEntries = true)
     public boolean setCategoryStatusToHidden(Long categoryId, Integer categoryStatus) {
         // 构建更新条件，只更新状态为0 (被删除/隐藏)
         LambdaUpdateWrapper<Category> updateWrapper = new LambdaUpdateWrapper<>();
@@ -121,6 +126,7 @@ public class CategoryServiceImpl implements CategoryService {
      */
     @Override
     @Transactional
+    @CacheEvict(value = "categories", allEntries = true)
     public CategoryDTO updateCategory(CategoryDTO categoryDTO) {
         if (categoryDTO.getCategoryId() == null) {
             throw new IllegalArgumentException("类别ID不能为空，无法更新");

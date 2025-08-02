@@ -10,12 +10,15 @@
     <RecommendView :recommendData="recommends"/>
     <!-- 点击之后，从子组件里会返回一个index，然后再执行HomeView里的tabClick函数 -->
     <TabControl :tabData="tabs" @tabClick="tabClick"/>
-    <GoodsList :goodsData="showGoods"/>
+    <GoodsList
+      :goods-type="currentType"
+      :page-size="6"
+    />
   </div>
 </template>
 
 <script setup>
-import {computed, onMounted, reactive, ref} from 'vue';
+import { ref, onMounted } from 'vue';
 import NavBar from '@/components/common/NavBar.vue';
 import SearchBar from '@/components/common/SearchBar.vue';
 import BannerView from './BannerView.vue';
@@ -30,32 +33,29 @@ const banners = ref([]);
 const recommends = ref([]);
 const tabs = ref([]);
 
-const currentType = ref('man');
-const goods = reactive({});
-
-const showGoods = computed(() => {
-  return goods[currentType.value];
-});
+const currentType = ref("deal");
 
 const tabClick = (index) => {
-  currentType.value = tabs.value[index].name;
+  // 根据tab类型设置goodsType
+  const tab = tabs.value[index];
+  if (tab.name === 'deal') {
+    currentType.value = 'deal';
+  } else if (tab.categoryId) {
+    currentType.value = tab.categoryId;
+  } else {
+    currentType.value = tab.name;
+  }
 }
 
 onMounted(async () => {
-  const [bannerRes, categoryRes, tabRes, manRes, womanRes, childrenRes] = await Promise.all([
+  const [bannerRes, categoryRes, tabRes] = await Promise.all([
     getAllBannerList(),
     getAllCategoryList(),
-    fetch('/tabs.json'),
-    fetch('/goodsman.json'),
-    fetch('/goodswoman.json'),
-    fetch('/goodschildren.json')
+    fetch('/tabs.json')
   ]);
 
-  banners.value = bannerRes;
-  recommends.value = categoryRes;
-  tabs.value = (await tabRes.json()).data;
-  goods.man =(await manRes.json()).data;
-  goods.woman =(await womanRes.json()).data;
-  goods.children = (await childrenRes.json()).data;
+  banners.value = bannerRes.data.data || [];
+  recommends.value = categoryRes.data.data || [];
+  tabs.value = (await tabRes.json()).data || [];
 });
 </script>

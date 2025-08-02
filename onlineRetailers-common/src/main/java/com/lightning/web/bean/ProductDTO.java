@@ -22,7 +22,7 @@ public class ProductDTO implements Serializable {
     @JsonSerialize(using = ToStringSerializer.class)
     private Long categoryId; // 分类ID
 
-    private String productDesc; // 商品描述
+    private String productName ;// '商品名称',
 
     private String mainImage; // 主图URL
     private MultipartFile mainImageFile; // 主图文件

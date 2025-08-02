@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
  * 商品API控制器
  */
 @RestController
-@RequestMapping("/product")
+@RequestMapping("/product/product")
 public class ProductController {
 
     @Autowired
@@ -27,7 +27,7 @@ public class ProductController {
      * @param productDTO 待上架的商品信息
      * @return 包含上架成功后商品DTO的统一响应
      */
-    @PostMapping
+    @PostMapping("/add")
     public ResponseEntity<ResponseResult> addProduct(ProductDTO productDTO) {
         try {
             ProductDTO addedProduct = productService.addProduct(productDTO);

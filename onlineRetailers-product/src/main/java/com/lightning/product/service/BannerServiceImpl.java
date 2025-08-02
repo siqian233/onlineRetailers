@@ -10,6 +10,8 @@ import com.lightning.web.bean.ResponseResult;
 import lombok.AllArgsConstructor;
 import lombok.extern.java.Log;
 import org.springframework.beans.BeanUtils;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -30,6 +32,7 @@ public class BannerServiceImpl implements BannerService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "banners", allEntries = true)
     public BannerDTO addBanner(BannerDTO bannerDTO) {
         ResponseResult rr = this.idGeneratorApi.getNextId();
         if (rr.getCode() != 1) {
@@ -62,10 +65,11 @@ public class BannerServiceImpl implements BannerService {
     }
 
     @Override
+    @Cacheable(value = "banners", key = "#bannerStatus != null ? 'status_' + #bannerStatus : 'all'")
     public List<BannerDTO> getBannersByStatus(Integer bannerStatus) {
         LambdaQueryWrapper<Banner> queryWrapper = new LambdaQueryWrapper<>();
         if (bannerStatus != null && bannerStatus != -1) {
-            queryWrapper.eq(Banner::getBannerStatus, bannerStatus);
+            queryWrapper.eq(Banner::getBannerStatus, bannerStatus); // 根据状态查询
         }
         List<Banner> banners = this.bannerMapper.selectList(queryWrapper);
 

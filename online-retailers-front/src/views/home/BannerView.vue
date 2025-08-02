@@ -1,6 +1,6 @@
 <!-- 轮播图组件 -->
 <template>
-    <div class="block">
+    <div class="banner-container">
         <el-carousel :interval="3000" height="200px">
             <el-carousel-item v-for="(item, index) in bannerData" :key="index">
                 <h3 onclick="">
@@ -17,5 +17,8 @@ defineProps(['bannerData']);
 </script>
 
 <style scoped>
-
+.banner-container{
+  width: 100%;
+  height: 200px;
+}
 </style>

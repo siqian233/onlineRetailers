@@ -10,6 +10,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * 轮播图API控制器
+ **/
 @RestController
 @RequestMapping("/product/banner")
 public class BannerController {
