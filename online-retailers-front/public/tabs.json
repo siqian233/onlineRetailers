@@ -3,7 +3,7 @@
     "data": [
         {
             "id": 1,
-            "title": "热销",
+            "title": "特价商品",
             "name": "deal"
         },{
             "id": 2,
@@ -11,8 +11,8 @@
             "name": "lovely"
         },{
             "id": 3,
-            "title": "特价商品",
-            "name": "special "
+            "title": "热销",
+            "name": "hot "
         }
     ]
 }

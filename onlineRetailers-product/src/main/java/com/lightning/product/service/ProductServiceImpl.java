@@ -165,12 +165,13 @@ public class ProductServiceImpl implements ProductService {
         BeanUtils.copyProperties(productDTO, product);
 
         int result = productMapper.insert(product);
-        if (result > 0) {
-            BeanUtils.copyProperties(product, productDTO);
-            return productDTO;
-        } else {
+        if (result <= 0) {
             throw new RuntimeException("商品上架失败");
         }
+
+        BeanUtils.copyProperties(product, productDTO);
+
+        return productDTO;
     }
 
     /**

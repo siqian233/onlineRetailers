@@ -28,15 +28,12 @@ import GoodsList from '@/components/content/GoodsList.vue';
 import {getAllBannerList} from "@/api/BannerApi.js";
 import {getAllCategoryList} from "@/api/CategoryApi.js";
 
-
 const banners = ref([]);
 const recommends = ref([]);
 const tabs = ref([]);
-
 const currentType = ref("deal");
 
 const tabClick = (index) => {
-  // 根据tab类型设置goodsType
   const tab = tabs.value[index];
   if (tab.name === 'deal') {
     currentType.value = 'deal';

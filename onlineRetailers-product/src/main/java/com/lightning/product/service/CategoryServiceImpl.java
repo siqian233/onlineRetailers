@@ -7,6 +7,10 @@ import com.lightning.web.api.FileUploadApi;
 import com.lightning.web.api.IdGeneratorApi;
 import com.lightning.web.bean.CategoryDTO;
 import com.lightning.web.bean.ResponseResult;
+import lombok.AllArgsConstructor;
+import lombok.extern.java.Log;
+import org.redisson.api.RBloomFilter;
+import org.redisson.api.RedissonClient;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
@@ -21,8 +25,13 @@ import java.util.stream.Collectors;
 /**
  * 商品分类服务实现类
  */
+@Log
 @Service
+@AllArgsConstructor
 public class CategoryServiceImpl implements CategoryService {
+
+    private final RedissonClient redissonClient;
+    private final String BLOOM_FILTER_KEY = "bloom:categories"; // 布隆过滤器的Redis Key
 
     @Autowired
     private CategoryMapper categoryMapper;
@@ -41,7 +50,6 @@ public class CategoryServiceImpl implements CategoryService {
     @Transactional
     @CacheEvict(value = "categories", allEntries = true)
     public CategoryDTO addCategory(CategoryDTO categoryDTO) {
-        // 1. 生成类别ID
         ResponseResult rr = this.idGeneratorApi.getNextId();
         if (rr.getCode() != 1) {
             throw new RuntimeException("类别ID生成失败");
@@ -49,30 +57,33 @@ public class CategoryServiceImpl implements CategoryService {
         Long categoryId = Long.parseLong(rr.getData().toString());
         categoryDTO.setCategoryId(categoryId);
 
-        // 2. 模拟图标上传并设置URL
         ResponseResult rr2 = this.fileUploadApi.upload(new MultipartFile[]{categoryDTO.getIconFile()});
         if (rr2.getCode() != 1) {
             throw new RuntimeException("类别主图片上传失败");
         }
         List<String> mainImages = (List<String>) rr2.getData();
         categoryDTO.setIcon(mainImages.get(0));
-        // 3. 设置默认状态为正常
+
         if (categoryDTO.getCategoryStatus() == null) {
             categoryDTO.setCategoryStatus(1); // 默认正常
         }
-        // 4. 将DTO转换为实体
         Category category = new Category();
-        // spring 提供一个工具类，用于完成 对象的属性拷贝
         BeanUtils.copyProperties(categoryDTO, category);
-        // 5. 插入数据库
+
         int result = categoryMapper.insert(category);
-        if (result > 0) {
-            // 插入成功后，返回包含完整信息的DTO
-            BeanUtils.copyProperties(category, categoryDTO);
-            return categoryDTO;
-        } else {
+        if (result <= 0) {
             throw new RuntimeException("新增类别失败");
         }
+
+        RBloomFilter<Long> bloomFilter = redissonClient.getBloomFilter(BLOOM_FILTER_KEY);
+        if (!bloomFilter.isExists()) {
+            bloomFilter.tryInit(10000L, 0.01);// 初始化：预计元素10000，误判率为0.01
+        }
+        bloomFilter.add(categoryDTO.getCategoryId());
+
+        BeanUtils.copyProperties(category, categoryDTO);
+
+        return categoryDTO;
     }
 
     /**
@@ -132,8 +143,13 @@ public class CategoryServiceImpl implements CategoryService {
             throw new IllegalArgumentException("类别ID不能为空，无法更新");
         }
 
-        // 模拟图标上传并设置URL (如果图标数据有变化)
-        // 假设以data:开头表示新上传的数据，或者根据实际情况判断是否需要重新上传
+        RBloomFilter<Long> bloomFilter = redissonClient.getBloomFilter(BLOOM_FILTER_KEY);
+        if (bloomFilter.contains(categoryDTO.getCategoryId())) {
+            log.warning("布隆过滤器拦截：categoryId 不存在 -> " + categoryDTO.getCategoryId());
+            return null;
+        }
+
+        // 图标上传并设置URL (如果图标数据有变化)
         if (categoryDTO.getIconFile() != null) {
             ResponseResult rr2 = this.fileUploadApi.upload(new MultipartFile[]{categoryDTO.getIconFile()});
             if (rr2.getCode() != 1) {
@@ -143,18 +159,15 @@ public class CategoryServiceImpl implements CategoryService {
             categoryDTO.setIcon(mainImages.get(0));
         }
 
-        // 将DTO转换为实体
         Category category = new Category();
         BeanUtils.copyProperties(categoryDTO, category);
 
-        // 执行更新，MyBatis Plus会根据实体中的@TableId注解自动识别主键
         int result = categoryMapper.updateById(category);
-        if (result > 0) {
-            // 更新成功后，返回最新的类别信息
-            return getCategoryById(categoryDTO.getCategoryId());
-        } else {
+        if (result <= 0) {
             throw new RuntimeException("类别更新失败，类别ID: " + categoryDTO.getCategoryId());
         }
+
+        return getCategoryById(categoryDTO.getCategoryId());
     }
 
     /**
@@ -165,12 +178,20 @@ public class CategoryServiceImpl implements CategoryService {
      */
     @Override
     public CategoryDTO getCategoryById(Long categoryId) {
+        RBloomFilter<Long> bloomFilter = redissonClient.getBloomFilter(BLOOM_FILTER_KEY);
+        if (bloomFilter.contains(categoryId)) {
+            log.warning("布隆过滤器拦截：categoryId 不存在 -> " + categoryId);
+            return null;
+        }
+
         Category category = categoryMapper.selectById(categoryId);
         if (category == null) {
             return null;
         }
+
         CategoryDTO dto = new CategoryDTO();
         BeanUtils.copyProperties(category, dto);
+
         return dto;
     }
 }
