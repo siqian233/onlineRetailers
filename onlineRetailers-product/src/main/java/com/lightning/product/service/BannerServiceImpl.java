@@ -43,18 +43,18 @@ public class BannerServiceImpl implements BannerService {
     @Transactional
     @CacheEvict(value = "banners", allEntries = true)
     public BannerDTO addBanner(BannerDTO bannerDTO) {
-        ResponseResult rr = this.idGeneratorApi.getNextId();
+        ResponseResult<Long> rr = this.idGeneratorApi.getNextId();
         if (rr.getCode() != 1) {
             throw new RuntimeException("轮播图ID生成失败");
         }
         Long bannerId = Long.parseLong(rr.getData().toString());
         bannerDTO.setBannerId(bannerId);
 
-        ResponseResult rr2 = this.fileUploadApi.upload(new MultipartFile[]{bannerDTO.getImageUrlFile()});
+        ResponseResult<List<String>> rr2 = this.fileUploadApi.upload(new MultipartFile[]{bannerDTO.getImageUrlFile()});
         if (rr2.getCode() != 1) {
             throw new RuntimeException("轮播图图片上传失败");
         }
-        List<String> mainImages = (List<String>) rr2.getData();
+        List<String> mainImages = rr2.getData();
         bannerDTO.setImageUrl(mainImages.get(0));
 
         if (bannerDTO.getBannerStatus() == null) {
@@ -123,8 +123,8 @@ public class BannerServiceImpl implements BannerService {
     }
 
     @Override
-    public boolean addBloomFilter(Long bannerId){
-        return addBloomFilterElement(bannerId);
+    public void addBloomFilter(Long bannerId){
+        addBloomFilterElement(bannerId);
     }
 
     public boolean isBloomFilterContains(Long bannerId) {
@@ -132,11 +132,11 @@ public class BannerServiceImpl implements BannerService {
         return bloomFilter.contains(bannerId);
     }
 
-    private boolean addBloomFilterElement(Long bannerId) {
+    private void addBloomFilterElement(Long bannerId) {
         RBloomFilter<Long> bloomFilter = redissonClient.getBloomFilter(BLOOM_FILTER_KEY);
         if (!bloomFilter.isExists()) {
             bloomFilter.tryInit(10000L, 0.01);
         }
-       return bloomFilter.add(bannerId);
+        bloomFilter.add(bannerId);
     }
 }

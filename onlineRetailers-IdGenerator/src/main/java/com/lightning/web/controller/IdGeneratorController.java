@@ -5,8 +5,7 @@ import com.lightning.web.bean.ResponseResult;
 import com.lightning.web.bean.TimeResult;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.AllArgsConstructor;
-import lombok.Data;
+
 import lombok.extern.java.Log;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -16,9 +15,9 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.Date;
 import java.util.List;
 
+@Log
 @RestController
 @RequestMapping("/id")
-@Log
 @Tag(name = "IdController", description = "分布式的Id生成器")
 public class IdGeneratorController {
 

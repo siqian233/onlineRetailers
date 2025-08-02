@@ -8,5 +8,5 @@ public interface BannerService {
     BannerDTO addBanner(BannerDTO banner);
     List<BannerDTO> getBannersByStatus(Integer status);
     BannerDTO getBannerById(Long bannerId);
-    boolean addBloomFilter(Long bannerId);
+    void addBloomFilter(Long bannerId);
 }
