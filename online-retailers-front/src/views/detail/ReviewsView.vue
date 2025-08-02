@@ -2,7 +2,7 @@
     <div>
         <div class="section-title">
             <h3>商品评价</h3>
-            <span class="more" @click="openPopup">查看全部 ></span>
+            <span class="more" @click="openPopup">查看全部></span>
         </div>
 
         <!-- 遮罩层 -->

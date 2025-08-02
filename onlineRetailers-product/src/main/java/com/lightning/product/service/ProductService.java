@@ -48,4 +48,5 @@ public interface ProductService {
      */
     ProductDTO getProductById(Long productId);
 
+    void addBloomFilter(Long bannerId);
 }

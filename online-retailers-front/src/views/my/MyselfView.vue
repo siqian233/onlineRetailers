@@ -7,17 +7,17 @@
         </NavBar>
 
         <!-- 用户信息栏 -->
-        <router-link to="/login" class="link">
+        <div class="user-info-container" @click="goToProfile">
             <div class="user-info">
                 <div class="avatar">
                     <el-icon>
                         <User />
                     </el-icon>
                 </div>
-                <div v-if="userAccount && userAccount.isLogin" class="login-text">
-                    <span>{{ userAccount.account }}</span>
+                <div v-if="isLoggedIn" class="login-text">
+                    <span>{{ username || '用户' }}</span>
                 </div>
-                <div v-else class="login-text">
+                <div v-else class="login-text" @click="goToLogin">
                     <span>点击登录</span>
                 </div>
                 <div class="arrow">
@@ -26,7 +26,7 @@
                     </el-icon>
                 </div>
             </div>
-        </router-link>
+        </div>
 
         <!-- 我的订单 -->
         <div class="order-section">
@@ -40,31 +40,31 @@
                 </div>
             </div>
             <div class="order-types">
-                <div class="order-item">
+                <div class="order-item" @click="viewOrders('pending')">
                     <el-icon>
                         <Money />
                     </el-icon>
                     <span>待付款</span>
                 </div>
-                <div class="order-item">
+                <div class="order-item" @click="viewOrders('shipped')">
                     <el-icon>
                         <Box />
                     </el-icon>
                     <span>待发货</span>
                 </div>
-                <div class="order-item">
+                <div class="order-item" @click="viewOrders('delivering')">
                     <el-icon>
                         <Van />
                     </el-icon>
                     <span>待收货</span>
                 </div>
-                <div class="order-item">
+                <div class="order-item" @click="viewOrders('review')">
                     <el-icon>
                         <ChatLineRound />
                     </el-icon>
                     <span>待评价</span>
                 </div>
-                <div class="order-item">
+                <div class="order-item" @click="viewOrders('refund')">
                     <el-icon>
                         <Service />
                     </el-icon>
@@ -75,7 +75,7 @@
 
         <!-- 其他设置项 -->
         <div class="settings-section">
-            <div class="setting-item">
+            <div class="setting-item" @click="goToAddress">
                 <div class="item-left">
                     <el-icon>
                         <Location />
@@ -86,7 +86,7 @@
                     <ArrowRight />
                 </el-icon>
             </div>
-            <router-link to="/customerService" class="setting-item">
+            <div class="setting-item" @click="goToCustomerService">
                 <div class="item-left">
                     <el-icon>
                         <Headset />
@@ -96,8 +96,8 @@
                 <el-icon>
                     <ArrowRight />
                 </el-icon>
-            </router-link>
-            <div class="setting-item">
+            </div>
+            <div class="setting-item" @click="goToSettings">
                 <div class="item-left">
                     <el-icon>
                         <Setting />
@@ -108,7 +108,7 @@
                     <ArrowRight />
                 </el-icon>
             </div>
-            <div class="setting-item">
+            <div class="setting-item" @click="goToSecurity">
                 <div class="item-left">
                     <el-icon>
                         <User />
@@ -119,7 +119,7 @@
                     <ArrowRight />
                 </el-icon>
             </div>
-            <div class="setting-item">
+            <div class="setting-item" @click="goToAbout">
                 <div class="item-left">
                     <el-icon>
                         <InfoFilled />
@@ -133,7 +133,7 @@
         </div>
 
         <!-- 退出登录 -->
-        <div class="logout-btn" @click="logout">
+        <div v-if="isLoggedIn" class="logout-btn" @click="handleLogout">
             退出登录
         </div>
     </div>
@@ -147,28 +147,84 @@ import {
     Setting, InfoFilled, User,
 } from '@element-plus/icons-vue';
 import { useRouter } from 'vue-router';
-import { ref, onMounted } from 'vue';
+import { computed } from 'vue';
+import { useUserStore } from '@/stores/user';
+import ElementPlus, {ElMessage} from "element-plus";
 
 const router = useRouter();
+const userStore = useUserStore();
 
-// 使用 ref 创建响应式数据
-const userAccount = ref(JSON.parse(localStorage.getItem('userAccount')) || {
-    account: '',
-    password: '',
-    isLogin: false
-});
+// 计算属性
+const isLoggedIn = computed(() => userStore.isLoggedIn());
+const username = computed(() => userStore.username);
 
-// localStorage.setItem('userAccount', JSON.stringify({
-//     account: 'zengyuxin',
-//     password: '123456',
-//     isLogin: false
-// }));
+// 页面跳转方法
+const goToLogin = () => {
+    router.push('/login');
+};
 
-const logout = () => {
-    userAccount.value.isLogin = false;
-    localStorage.setItem('userAccount', JSON.stringify(userAccount.value));
-    alert('账号已退出');
-    // 使用 router 进行跳转而不是强制刷新页面
+const goToProfile = () => {
+    if (isLoggedIn.value) {
+        router.push('/profile');
+    } else {
+        goToLogin();
+    }
+};
+
+const viewAllOrders = () => {
+    if (checkLogin()) {
+        router.push('/orders');
+    }
+};
+
+const viewOrders = (type) => {
+    if (checkLogin()) {
+        router.push(`/orders/${type}`);
+    }
+};
+
+const goToAddress = () => {
+    if (checkLogin()) {
+        router.push('/address');
+    }
+};
+
+const goToCustomerService = () => {
+    if (checkLogin()) {
+        router.push('/customer-service');
+    }
+};
+
+const goToSettings = () => {
+    if (checkLogin()) {
+        router.push('/settings');
+    }
+};
+
+const goToSecurity = () => {
+    if (checkLogin()) {
+        router.push('/security');
+    }
+};
+
+const goToAbout = () => {
+    router.push('/about');
+};
+
+// 检查登录状态
+const checkLogin = () => {
+    if (!isLoggedIn.value) {
+        router.push('/login');
+        ElMessage.error('请先登录');
+        return false;
+    }
+    return true;
+};
+
+// 退出登录
+const handleLogout = () => {
+    userStore.logout();
+    ElMessage.success('已退出登录');
     router.push('/login');
 };
 </script>
@@ -181,16 +237,15 @@ const logout = () => {
 }
 
 /* 用户信息栏 */
-.link {
-    text-decoration: none;
+.user-info-container {
+    background-color: #fff;
+    margin-bottom: 10px;
 }
 
 .user-info {
     display: flex;
     align-items: center;
     padding: 20px 15px;
-    background-color: #fff;
-    margin-bottom: 10px;
 }
 
 .avatar {
@@ -200,10 +255,13 @@ const logout = () => {
     border: 1px solid #ccc;
     height: 60px;
     width: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .avatar .el-icon {
-    font-size: 60px;
+    font-size: 30px;
     color: #666;
 }
 
@@ -242,6 +300,7 @@ const logout = () => {
     align-items: center;
     color: #999;
     font-size: 14px;
+    cursor: pointer;
 }
 
 .view-all span {
@@ -258,6 +317,7 @@ const logout = () => {
     display: flex;
     flex-direction: column;
     align-items: center;
+    cursor: pointer;
 }
 
 .order-item .el-icon {
@@ -283,6 +343,7 @@ const logout = () => {
     align-items: center;
     padding: 15px;
     border-bottom: 1px solid #f5f5f5;
+    cursor: pointer;
 }
 
 .item-left {
@@ -308,5 +369,6 @@ const logout = () => {
     text-align: center;
     border-radius: 6px;
     font-size: 16px;
+    cursor: pointer;
 }
 </style>

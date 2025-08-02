@@ -17,26 +17,44 @@
 
             <!-- 登录表单 -->
             <div class="login-form">
-                <!-- 账号输入框 -->
+                <!-- 用户名输入框 -->
                 <div class="input-container">
-                    <el-input v-model="account" placeholder="请输入账号" class="custom-input" :prefix-icon="User" />
+                    <el-input
+                        v-model="loginForm.username"
+                        placeholder="请输入用户名"
+                        class="custom-input"
+                        :prefix-icon="User"
+                        @keyup.enter="handleLogin"
+                    />
                 </div>
 
                 <!-- 密码输入框 -->
                 <div class="input-container">
-                    <el-input v-model="password" placeholder="请输入密码" type="password" class="custom-input"
-                        :prefix-icon="Lock" show-password />
+                    <el-input
+                        v-model="loginForm.password"
+                        placeholder="请输入密码"
+                        type="password"
+                        class="custom-input"
+                        :prefix-icon="Lock"
+                        show-password
+                        @keyup.enter="handleLogin"
+                    />
                 </div>
 
                 <!-- 登录按钮 -->
-                <el-button class="login-btn" type="primary" @click="handleLogin">
-                    登录
+                <el-button
+                    class="login-btn"
+                    type="primary"
+                    @click="handleLogin"
+                    :loading="loading"
+                    :disabled="loading"
+                >
+                    {{ loading ? '登录中...' : '登录' }}
                 </el-button>
-                <br />
-                <br />
+
                 <!-- 注册按钮 -->
-                <el-button class="registered-btn">
-                    还没有账号，去注册一个
+                <el-button class="register-btn" @click="goToRegister">
+                    还没有账号？立即注册
                 </el-button>
             </div>
         </div>
@@ -54,25 +72,74 @@
 
 <script setup>
 import NavBar from '../../components/common/NavBar.vue';
-import { ref } from 'vue';
+import { ref, reactive } from 'vue';
+import { useRouter } from 'vue-router';
+import { ElMessage } from 'element-plus';
 import { ShoppingTrolley, User, Lock } from '@element-plus/icons-vue';
-import router from '@/router';
+import { useUserStore } from '@/stores/user';
 
-const userAccount = JSON.parse(localStorage.getItem('userAccount'));
-const account = ref('');
-const password = ref('');
-const isLogin = ref(false);
+const router = useRouter();
+const userStore = useUserStore();
 
-const handleLogin = () => {
-    if (userAccount.account === account.value && userAccount.password === password.value) {
-        isLogin.value = true;
-        userAccount.isLogin = true;
-        localStorage.setItem('userAccount', JSON.stringify(userAccount));
-        router.push({ name: 'myself' });
-        alert('登录成功');
-    } else {
-        alert('账号或密码错误');
+// 表单数据
+const loginForm = reactive({
+    username: '',
+    password: ''
+});
+
+// 状态管理
+const loading = ref(false);
+
+// 登录处理
+const handleLogin = async () => {
+    // 表单验证
+    if (!loginForm.username.trim()) {
+        ElMessage.warning('请输入用户名');
+        return;
     }
+
+    if (!loginForm.password) {
+        ElMessage.warning('请输入密码');
+        return;
+    }
+
+    // 设置加载状态
+    loading.value = true;
+
+    try {
+        // 调用登录方法
+        const result = await userStore.login({
+            username: loginForm.username,
+            password: loginForm.password
+        });
+
+        if (result.success) {
+            ElMessage.success('登录成功');
+            // 跳转到首页或来源页面
+            const redirect = router.currentRoute.value.query.redirect || '/my';
+            router.push(redirect);
+        } else {
+            ElMessage.error(result.error || '登录失败');
+        }
+    } catch (error) {
+        console.error('登录异常:', error);
+        ElMessage.error('登录过程中发生错误');
+    } finally {
+        loading.value = false;
+    }
+};
+
+// 页面跳转
+const goToRegister = () => {
+    router.push('/register');
+};
+
+const goToAbout = () => {
+    router.push('/about');
+};
+
+const goToResetPassword = () => {
+    router.push('/reset-password');
 };
 </script>
 
@@ -82,7 +149,6 @@ const handleLogin = () => {
     display: flex;
     flex-direction: column;
     background-color: white;
-    /* 纯白背景 */
 }
 
 .login-content {
@@ -138,24 +204,31 @@ const handleLogin = () => {
     border: none;
     font-size: 16px;
     font-weight: bold;
+    margin-bottom: 20px;
 }
 
 .login-btn:hover {
     background-color: #ff3a00;
 }
 
-.registered-btn {
+.login-btn:disabled {
+    background-color: #ffb399;
+}
+
+/* 注册按钮样式 */
+.register-btn {
     width: 100%;
     height: 50px;
     border-radius: 25px;
     background-color: #ffffff;
-    border: none;
+    border: 1px solid #000000;
     font-size: 16px;
     font-weight: bold;
-    border: 1px solid #000000;
+    margin-left: 0;
+    color: #000000;
 }
 
-.registered-btn:hover {
+.register-btn:hover {
     color: #3b3b3b;
     background-color: #f5f5f5;
 }

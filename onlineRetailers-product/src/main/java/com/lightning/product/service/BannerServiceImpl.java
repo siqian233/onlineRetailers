@@ -34,6 +34,11 @@ public class BannerServiceImpl implements BannerService {
     private final FileUploadApi fileUploadApi;
     private final IdGeneratorApi idGeneratorApi;
 
+    /**
+     * 新增轮播图
+     * @param bannerDTO 轮播图数据
+     * @return 新增的轮播图数据
+     */
     @Override
     @Transactional
     @CacheEvict(value = "banners", allEntries = true)
@@ -62,17 +67,19 @@ public class BannerServiceImpl implements BannerService {
         if (result <= 0) {
             throw new RuntimeException("新增类别失败");
         }
-        BeanUtils.copyProperties(banner, bannerDTO);
 
-        RBloomFilter<Long> bloomFilter = redissonClient.getBloomFilter(BLOOM_FILTER_KEY);
-        if (!bloomFilter.isExists()) {
-            bloomFilter.tryInit(10000L, 0.01); // 初始化：预计元素10000，误判率为0.01
-        }
-        bloomFilter.add(bannerDTO.getBannerId()); // 添加 bannerId 到布隆过滤器中
+        addBloomFilterElement(bannerDTO.getBannerId());
+
+        addBloomFilterElement(bannerId);
 
         return bannerDTO;
     }
 
+    /**
+     * 根据状态查询轮播图
+     * @param bannerStatus 轮播图状态
+     * @return 轮播图列表
+     */
     @Override
     @Cacheable(value = "banners", key = "#bannerStatus != null ? 'status_' + #bannerStatus : 'all'")
     public List<BannerDTO> getBannersByStatus(Integer bannerStatus) {
@@ -92,10 +99,14 @@ public class BannerServiceImpl implements BannerService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * 根据ID查询轮播图
+     * @param bannerId 轮播图ID
+     * @return 轮播图数据
+     */
     @Override
     public BannerDTO getBannerById(Long bannerId) {
-        RBloomFilter<Long> bloomFilter = redissonClient.getBloomFilter(BLOOM_FILTER_KEY);
-        if (!bloomFilter.contains(bannerId)) {
+        if (!isBloomFilterContains(bannerId)) {
             log.warning("布隆过滤器拦截：bannerId 不存在 -> " + bannerId);
             return null;
         }
@@ -111,4 +122,21 @@ public class BannerServiceImpl implements BannerService {
         return dto;
     }
 
+    @Override
+    public boolean addBloomFilter(Long bannerId){
+        return addBloomFilterElement(bannerId);
+    }
+
+    public boolean isBloomFilterContains(Long bannerId) {
+        RBloomFilter<Long> bloomFilter = redissonClient.getBloomFilter(BLOOM_FILTER_KEY);
+        return bloomFilter.contains(bannerId);
+    }
+
+    private boolean addBloomFilterElement(Long bannerId) {
+        RBloomFilter<Long> bloomFilter = redissonClient.getBloomFilter(BLOOM_FILTER_KEY);
+        if (!bloomFilter.isExists()) {
+            bloomFilter.tryInit(10000L, 0.01);
+        }
+       return bloomFilter.add(bannerId);
+    }
 }

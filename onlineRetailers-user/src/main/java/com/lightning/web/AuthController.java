@@ -1,6 +1,6 @@
 package com.lightning.web;
 
-import com.lightning.service.UserService;
+import com.lightning.service.UserServiceImpl;
 import com.lightning.web.bean.UserDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,11 +14,11 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/auth")
 public class AuthController {
 
-    private final UserService userService;
+    private final UserServiceImpl userServiceImpl;
 
 
-    public AuthController(UserService userService) {
-        this.userService = userService;
+    public AuthController(UserServiceImpl userServiceImpl) {
+        this.userServiceImpl = userServiceImpl;
     }
 
     /**
@@ -29,7 +29,7 @@ public class AuthController {
     @RequestMapping(value = "/register", method = RequestMethod.POST)
     public ResponseEntity<?> register(UserDTO userDTO) {
         try {
-            UserDTO registeredUser = userService.registerUser(userDTO);
+            UserDTO registeredUser = userServiceImpl.registerUser(userDTO);
             return ResponseEntity.status(HttpStatus.CREATED).body(registeredUser); // 201 Created
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage()); // 409 Conflict
@@ -43,7 +43,7 @@ public class AuthController {
      */
     @GetMapping("/check-username")
     public ResponseEntity<Boolean> checkUsernameExists(@RequestParam String username) {
-        boolean exists = userService.checkUsernameExists(username);
+        boolean exists = userServiceImpl.checkUsernameExists(username);
         return ResponseEntity.ok(exists);
     }
 
@@ -55,13 +55,12 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody AuthRequest authRequest) {
         try {
-            AuthResponse response = userService.loginUser(authRequest);
+            AuthResponse response = userServiceImpl.loginUser(authRequest);
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage()); // 401 Unauthorized
         }
     }
-
 
     /**
      * 注销登录状态（通常是客户端行为，服务端无状态）。
@@ -72,7 +71,7 @@ public class AuthController {
     public ResponseEntity<String> logout(@RequestHeader(value = "Authorization", required = false) String token) {
         // 对于无状态 JWT，注销通常意味着客户端删除其本地存储的 Token。
         // 如果需要服务器端强制注销（例如，将 Token 加入黑名单），可以在 JwtTokenUtil 中实现。
-        userService.logout(token);
+        userServiceImpl.logout(token);
         return ResponseEntity.ok("Logged out successfully (client-side token deletion).");
     }
 }

@@ -50,19 +50,16 @@ public class CategoryServiceImpl implements CategoryService {
     @Transactional
     @CacheEvict(value = "categories", allEntries = true)
     public CategoryDTO addCategory(CategoryDTO categoryDTO) {
-        ResponseResult rr = this.idGeneratorApi.getNextId();
+        ResponseResult<Long> rr = this.idGeneratorApi.getNextId();
         if (rr.getCode() != 1) {
             throw new RuntimeException("类别ID生成失败");
         }
         Long categoryId = Long.parseLong(rr.getData().toString());
         categoryDTO.setCategoryId(categoryId);
 
-        ResponseResult rr2 = this.fileUploadApi.upload(new MultipartFile[]{categoryDTO.getIconFile()});
-        if (rr2.getCode() != 1) {
-            throw new RuntimeException("类别主图片上传失败");
+        if (categoryDTO.getIconFile() != null) {
+            uploadCategoryIcon(categoryDTO);
         }
-        List<String> mainImages = (List<String>) rr2.getData();
-        categoryDTO.setIcon(mainImages.get(0));
 
         if (categoryDTO.getCategoryStatus() == null) {
             categoryDTO.setCategoryStatus(1); // 默认正常
@@ -151,12 +148,7 @@ public class CategoryServiceImpl implements CategoryService {
 
         // 图标上传并设置URL (如果图标数据有变化)
         if (categoryDTO.getIconFile() != null) {
-            ResponseResult rr2 = this.fileUploadApi.upload(new MultipartFile[]{categoryDTO.getIconFile()});
-            if (rr2.getCode() != 1) {
-                throw new RuntimeException("类别主图片上传失败");
-            }
-            List<String> mainImages = (List<String>) rr2.getData();
-            categoryDTO.setIcon(mainImages.get(0));
+            uploadCategoryIcon(categoryDTO);
         }
 
         Category category = new Category();
@@ -168,6 +160,20 @@ public class CategoryServiceImpl implements CategoryService {
         }
 
         return getCategoryById(categoryDTO.getCategoryId());
+    }
+
+    /**
+     * 上传类别图标
+     *
+     * @param categoryDTO 待上传的类别信息
+     */
+    private void uploadCategoryIcon(CategoryDTO categoryDTO) {
+        ResponseResult<List<String>> rr2 = this.fileUploadApi.upload(new MultipartFile[]{categoryDTO.getIconFile()});
+        if (rr2.getCode() != 1) {
+            throw new RuntimeException("类别主图片上传失败");
+        }
+        List<String> mainImages = rr2.getData();
+        categoryDTO.setIcon(mainImages.get(0));
     }
 
     /**

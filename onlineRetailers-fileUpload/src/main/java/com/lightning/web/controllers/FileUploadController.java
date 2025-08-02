@@ -14,14 +14,14 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.ArrayList;
 import java.util.List;
 
-@RestController
 @Log
+@RestController
 public class FileUploadController {
     @Autowired
     private FileDeduplicationService fileDeduplicationService;
 
     @RequestMapping(value = "/upload", method = RequestMethod.POST)
-    public ResponseResult upload(
+    public ResponseResult<List<String>> upload(
             @RequestParam("uploadFiles") MultipartFile[] uploadFiles
     ) {
         if (uploadFiles.length == 0) {
@@ -50,7 +50,8 @@ public class FileUploadController {
         }
         if (!urls.isEmpty()) {
             log.info("上传到OSS成功,多个图片的访问地址为:" + urls);
-            return ResponseResult.ok("上传接收数据成功").setData(urls);
+            ResponseResult<List<String>> response = ResponseResult.ok("上传接收数据成功");
+            return response.setData(urls);
         } else {
             return ResponseResult.error("上传文件失败");
         }

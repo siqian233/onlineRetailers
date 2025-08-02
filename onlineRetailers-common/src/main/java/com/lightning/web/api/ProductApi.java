@@ -10,6 +10,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 @FeignClient(name = "product")
 public interface ProductApi {
     @RequestMapping(value = "/product/product/add", method = RequestMethod.POST)
-    ResponseResult addProduct(@RequestBody ProductDTO productDTO);
+    ResponseResult<ProductDTO> addProduct(@RequestBody ProductDTO productDTO);
 
 }

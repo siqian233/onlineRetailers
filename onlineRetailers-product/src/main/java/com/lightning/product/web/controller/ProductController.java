@@ -28,15 +28,17 @@ public class ProductController {
      * @return 包含上架成功后商品DTO的统一响应
      */
     @PostMapping("/add")
-    public ResponseEntity<ResponseResult> addProduct(ProductDTO productDTO) {
+    public ResponseEntity<ResponseResult<ProductDTO>> addProduct(ProductDTO productDTO) {
         try {
             ProductDTO addedProduct = productService.addProduct(productDTO);
+            ResponseResult<ProductDTO> result= ResponseResult.ok("商品上架成功");
+
             // 商品创建成功，返回HTTP 201 Created，业务码1，并携带新增商品数据
             return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(ResponseResult.ok("商品上架成功").setData(addedProduct));
+                    .body(result.setData(addedProduct));
         } catch (Exception e) {
+
             // 捕获异常，返回HTTP 500 Internal Server Error，业务码0，并提示错误信息
-            // 实际项目中应根据异常类型返回更具体的HTTP状态码和业务错误信息
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ResponseResult.error("商品上架失败: " + e.getMessage()));
         }
@@ -52,10 +54,11 @@ public class ProductController {
      * @return 包含商品DTO分页结果的统一响应
      */
     @GetMapping("/page")
-    public ResponseEntity<ResponseResult> getProductsPaged(ProductQueryVO queryVO) {
+    public ResponseEntity<ResponseResult<IPage<ProductDTO>>> getProductsPaged(ProductQueryVO queryVO) {
         IPage<ProductDTO> productPage = productService.listProductsPaged(queryVO);
-        // 成功时，返回HTTP 200 OK，业务码1，并携带分页数据
-        return ResponseEntity.ok(ResponseResult.ok("查询成功").setData(productPage));
+        ResponseResult<IPage<ProductDTO> > result= ResponseResult.ok("查询成功");
+
+        return ResponseEntity.ok(result.setData(productPage));
     }
 
     /**
@@ -63,10 +66,12 @@ public class ProductController {
      * @return 包含特价商品列表的ResponseEntity
      */
     @GetMapping("/special-offers")
-    public ResponseEntity<ResponseResult> getSpecialOfferProducts( ProductQueryVO queryVO) {
+    public ResponseEntity<ResponseResult<IPage<ProductDTO>>> getSpecialOfferProducts( ProductQueryVO queryVO) {
         IPage<ProductDTO> specialOfferProducts = productService.getSpecialOfferProducts(queryVO);
+        ResponseResult<IPage<ProductDTO> > result= ResponseResult.ok("查询成功");
+
         // 即使列表为空，也认为成功，返回空列表
-        return ResponseEntity.ok(ResponseResult.ok("特价产品列表获取成功").setData(specialOfferProducts));
+        return ResponseEntity.ok(result.setData(specialOfferProducts));
     }
 
     /**
@@ -77,11 +82,12 @@ public class ProductController {
      * @return 包含商品DTO的统一响应
      */
     @GetMapping("/{productId}")
-    public ResponseEntity<ResponseResult> getProductById(@PathVariable Long productId) {
+    public ResponseEntity<ResponseResult<ProductDTO>> getProductById(@PathVariable("productId") Long productId) {
         ProductDTO productDTO = productService.getProductById(productId);
         if (productDTO != null) {
             // 找到商品，返回HTTP 200 OK，业务码1，并携带商品数据
-            return ResponseEntity.ok(ResponseResult.ok("查询成功").setData(productDTO));
+            ResponseResult<ProductDTO> result= ResponseResult.ok("查询成功");
+            return ResponseEntity.ok(result.setData(productDTO));
         } else {
             // 未找到商品，返回HTTP 404 Not Found，业务码0，并提示错误信息
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -98,11 +104,11 @@ public class ProductController {
      * @return 操作结果的统一响应
      */
     @PutMapping("/{productId}/delist")
-    public ResponseEntity<ResponseResult> delistProduct(@PathVariable Long productId) {
+    public ResponseEntity<ResponseResult<Void>> delistProduct(@PathVariable("productId") Long productId) {
         boolean success = productService.delistProduct(productId);
         if (success) {
             // 下架成功，返回HTTP 200 OK，业务码1
-            // 注意：这里也可以选择返回 204 No Content，但为了统一响应体，我们返回200 OK
+            // 也可以选择返回 204 No Content，但为了统一响应体，返回200 OK
             return ResponseEntity.ok(ResponseResult.ok("商品下架成功"));
         } else {
             // 下架失败（例如商品不存在），返回HTTP 404 Not Found，业务码0
@@ -120,7 +126,7 @@ public class ProductController {
      * @return 包含更新成功后商品DTO的统一响应
      */
     @PutMapping("/{productId}")
-    public ResponseEntity<ResponseResult> updateProduct(@PathVariable Long productId, @RequestBody ProductDTO productDTO) {
+    public ResponseEntity<ResponseResult<ProductDTO>> updateProduct(@PathVariable("productId") Long productId, @RequestBody ProductDTO productDTO) {
         if (!productId.equals(productDTO.getProductId())) {
             // 请求路径ID与DTO中的ID不一致，返回HTTP 400 Bad Request，业务码0
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -128,8 +134,9 @@ public class ProductController {
         }
         try {
             ProductDTO updatedProduct = productService.updateProduct(productDTO);
+            ResponseResult<ProductDTO> result= ResponseResult.ok("商品更新成功");
             // 更新成功，返回HTTP 200 OK，业务码1，并携带更新后的商品数据
-            return ResponseEntity.ok(ResponseResult.ok("商品更新成功").setData(updatedProduct));
+            return ResponseEntity.ok(result.setData(updatedProduct));
         } catch (IllegalArgumentException e) {
             // 参数非法（例如商品ID为空），返回HTTP 400 Bad Request，业务码0
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -139,5 +146,19 @@ public class ProductController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ResponseResult.error("商品更新失败: " + e.getMessage()));
         }
+    }
+
+    /**
+     * 测试布隆过滤器
+     * POST /products/test/bloom/add
+     *
+     * @param productId 商品ID
+     * @return 布隆过滤器添加结果
+     */
+    @PostMapping("/test/bloom/add")
+    public ResponseEntity<ResponseResult<Void>> addBloomFilter(@RequestParam("productId") Long productId) {
+        productService.addBloomFilter(productId);
+
+        return ResponseEntity.ok(ResponseResult.ok("添加布隆过滤成功"));
     }
 }

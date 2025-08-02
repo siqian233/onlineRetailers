@@ -1,6 +1,5 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-
 import { loginAPI, registerAPI } from '@/api/UserApi';
 
 export const useUserStore = defineStore('user', () => {
@@ -10,81 +9,121 @@ export const useUserStore = defineStore('user', () => {
     const roles = ref([]);
 
     // 登录方法
-    const login = async (inputUserName, inputUserPassword) => {
+    const login = async (loginData) => {
         try {
-            const res = await loginAPI({ userName: inputUserName, userPassword: inputUserPassword });
-
-            // 检查服务器响应码和数据结构
-            if (res.data.code === 1 && res.data.data && res.data.data.token && res.data.data.myUserDTO) {
-                const { token: apiToken, myUserDTO } = res.data.data;
-
+            const response = await loginAPI(loginData);
+            
+            // 检查服务器响应
+            if (response.data && response.data.token && response.data.myUserDTO) {
+                const { token: userToken, myUserDTO } = response.data;
+                
+                // 更新状态
                 userInfo.value = myUserDTO;
-                token.value = apiToken;
-                username.value = myUserDTO.userName;
-                roles.value = myUserDTO.roles;
-
-                // 持久化存储到 localStorage
-                localStorage.setItem('userInfo', JSON.stringify(userInfo.value));
-                localStorage.setItem('token', token.value);
-                localStorage.setItem('userName', username.value);
-                localStorage.setItem('roles', JSON.stringify(roles.value)); // 数组需要转换为 JSON 字符串存储
-
-                return res; // 登录成功后返回整个响应，供组件进一步处理（可选）
+                token.value = userToken;
+                username.value = myUserDTO.userName || myUserDTO.username || '';
+                roles.value = myUserDTO.roles || [];
+                
+                // 持久化存储
+                localStorage.setItem('userInfo', JSON.stringify(myUserDTO));
+                localStorage.setItem('token', userToken);
+                localStorage.setItem('username', username.value);
+                localStorage.setItem('roles', JSON.stringify(roles.value));
+                
+                return { success: true, data: response.data };
             } else {
-                // 如果服务器返回码不是1，或者数据结构不符合预期
-                // 可以从 res.msg 中获取错误信息，或者提供一个通用错误
-                throw new Error(res.msg || '服务器返回数据格式不正确或操作失败。');
+                throw new Error(response.data?.msg || '登录响应数据格式不正确');
             }
         } catch (error) {
-            console.error('User store login error:', error);
-            const errorMessage = error.response?.data?.msg || error.message || '登录失败，请稍后再试。';
-            throw new Error(errorMessage);
+            console.error('登录失败:', error);
+            const errorMessage = error.response?.data?.msg || 
+                               error.response?.data?.message || 
+                               error.message || 
+                               '登录失败，请稍后再试';
+            return { success: false, error: errorMessage };
         }
     };
 
     // 退出登录
     const logout = () => {
+        // 清空状态
         userInfo.value = {};
         token.value = '';
         username.value = '';
         roles.value = [];
+        
         // 清空本地存储
         localStorage.removeItem('userInfo');
         localStorage.removeItem('token');
         localStorage.removeItem('username');
         localStorage.removeItem('roles');
+        
+        return { success: true, message: '已退出登录' };
     };
 
     // 注册方法
     const register = async (userData) => {
-        const res = await registerAPI(userData);
-        // 假设注册API的返回结构也类似：{ code: 1, msg: "...", data: {...} }
-        if (res.code === 1) {
-            return res.data; // 返回注册成功的数据部分
-        } else {
-            throw new Error(res.msg || '注册失败。');
+        try {
+            const response = await registerAPI(userData);
+            
+            if (response.data) {
+                return { 
+                    success: response.data.code === 1, 
+                    data: response.data.data,
+                    message: response.data.msg || '注册成功'
+                };
+            } else {
+                throw new Error('注册响应数据格式不正确');
+            }
+        } catch (error) {
+            console.error('注册失败:', error);
+            const errorMessage = error.response?.data?.msg || 
+                               error.response?.data?.message || 
+                               error.message || 
+                               '注册失败，请稍后再试';
+            return { success: false, error: errorMessage };
         }
     };
 
-    // 页面刷新时，用户状态保持，从本地获取数据
-    const getStorageData = () => {
-        const storageUserInfo = localStorage.getItem('userInfo');
-        const storageToken = localStorage.getItem('token');
-        const storageUsername = localStorage.getItem('username');
-        const storageRoles = localStorage.getItem('roles');
+    // 页面刷新时恢复用户状态
+    const restoreUserState = () => {
+        try {
+            const storedUserInfo = localStorage.getItem('userInfo');
+            const storedToken = localStorage.getItem('token');
+            const storedUsername = localStorage.getItem('username');
+            const storedRoles = localStorage.getItem('roles');
 
-        if (storageUserInfo) {
-            userInfo.value = JSON.parse(storageUserInfo);
+            if (storedUserInfo) {
+                userInfo.value = JSON.parse(storedUserInfo);
+            }
+            if (storedToken) {
+                token.value = storedToken;
+            }
+            if (storedUsername) {
+                username.value = storedUsername;
+            }
+            if (storedRoles) {
+                roles.value = JSON.parse(storedRoles);
+            }
+        } catch (error) {
+            console.error('恢复用户状态失败:', error);
+            // 如果解析失败，清空所有存储
+            logout();
         }
-        if (storageToken) {
-            token.value = storageToken;
-        }
-        if (storageUsername) {
-            username.value = storageUsername;
-        }
-        if (storageRoles) {
-            roles.value = JSON.parse(storageRoles); // 存储时转为JSON字符串，读取时需解析
-        }
+    };
+
+    // 检查用户是否已登录
+    const isLoggedIn = () => {
+        return !!token.value && token.value.length > 0;
+    };
+
+    // 获取用户角色
+    const getUserRoles = () => {
+        return roles.value;
+    };
+
+    // 检查是否具有特定角色
+    const hasRole = (role) => {
+        return roles.value.includes(role);
     };
 
     return {
@@ -95,6 +134,9 @@ export const useUserStore = defineStore('user', () => {
         login,
         logout,
         register,
-        getStorageData
+        restoreUserState,
+        isLoggedIn,
+        getUserRoles,
+        hasRole
     };
 });

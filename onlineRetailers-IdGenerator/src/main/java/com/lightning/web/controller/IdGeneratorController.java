@@ -2,8 +2,11 @@ package com.lightning.web.controller;
 
 import com.lightning.util.SnowflakeIdGenerator;
 import com.lightning.web.bean.ResponseResult;
+import com.lightning.web.bean.TimeResult;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.extern.java.Log;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -26,10 +29,11 @@ public class IdGeneratorController {
      */
     @RequestMapping("/next")
     @Operation(summary = "生成一个Id号", description = "生成一个Id号，格式:[ 1bit | 41bit时间戳 | 10bit机器ID（5 datacenter + 5 worker）| 12bit序列号 ]")
-    public ResponseResult getNextId() {
-        long id=generator.nextId();
-        log.info("调用nextId()生成的id号为:" +  id );   //日志: 异步记录
-        return ResponseResult.ok().setData(id);
+    public ResponseResult<Long> getNextId() {
+        long id = generator.nextId();
+        log.info("调用nextId()生成的id号为:" + id);
+        ResponseResult<Long> result = ResponseResult.ok();
+        return result.setData(id);
     }
 
     /**
@@ -37,9 +41,10 @@ public class IdGeneratorController {
      */
     @GetMapping("/batch")
     @Operation(summary = "生成size个Id号", description = "Id号格式:[ 1bit | 41bit时间戳 | 10bit机器ID（5 datacenter + 5 worker）| 12bit序列号 ]")
-    public ResponseResult getBatchIds(@RequestParam(value="size", defaultValue = "10") int size) {
+    public ResponseResult<List<Long>> getBatchIds(@RequestParam(value = "size", defaultValue = "10") int size) {
         List<Long> ids = generator.nextIdBatch(size);
-        return ResponseResult.ok().setData(ids);
+        ResponseResult<List<Long>> result = ResponseResult.ok();
+        return result.setData(ids);
     }
 
     /**
@@ -48,9 +53,10 @@ public class IdGeneratorController {
     @GetMapping("/parse/time")
     @Operation(summary = "根据Id号解析出时间戳", description = "格式: \"timestamp\": 1752283999462,\n" +
             "        \"date\": \"2025-07-12T01:33:19.462+00:00\"")
-    public ResponseResult parseTime(@RequestParam("id") long id) {
+    public ResponseResult<TimeResult> parseTime(@RequestParam("id") long id) {
         long ts = generator.parseIdToTime(id);
-        return ResponseResult.ok().setData(new TimeResult(ts, new Date(ts)));
+        ResponseResult<TimeResult> result = ResponseResult.ok();
+        return result.setData(new TimeResult(ts, new Date(ts)));
     }
 
     /**
@@ -58,8 +64,9 @@ public class IdGeneratorController {
      */
     @GetMapping("/parse/datacenter")
     @Operation(summary = "根据Id号解析数据中心号")
-    public ResponseResult parseDatacenter(@RequestParam("id") long id) {
-        return ResponseResult.ok().setData(generator.parseIdToDatacenterId(id));
+    public ResponseResult<Long> parseDatacenter(@RequestParam("id") long id) {
+        ResponseResult<Long> result = ResponseResult.ok();
+        return result.setData(generator.parseIdToDatacenterId(id));
     }
 
     /**
@@ -67,26 +74,13 @@ public class IdGeneratorController {
      */
     @GetMapping("/parse/worker")
     @Operation(summary = "根据Id号解析机器号")
-    public ResponseResult parseWorker(@RequestParam("id") long id) {
-        return ResponseResult.ok().setData(generator.parseIdToWorkerId(id));
+    public ResponseResult<Long> parseWorker(@RequestParam("id") long id) {
+        ResponseResult<Long> result = ResponseResult.ok();
+        return result.setData(generator.parseIdToWorkerId(id));
     }
 
     @GetMapping("/fallback/next")//限流友好服务
-    public ResponseResult fallback() {
+    public ResponseResult<String> fallback() {
         return ResponseResult.error("节假日访问高峰，服务已限流");
     }
-
-    /**
-     * 内部时间封装类
-     */
-    @lombok.Data
-    @lombok.AllArgsConstructor
-    static class TimeResult {
-        private long timestamp;
-        private Date date;
-    }
-
-
-
-
 }

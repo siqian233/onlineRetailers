@@ -21,6 +21,7 @@ import java.util.List;
 public class CategoryController {
 
     public static final Integer CATEGORY_STATUS_NORMAL = 1;
+
     @Autowired
     private CategoryService categoryService;
 
@@ -32,13 +33,14 @@ public class CategoryController {
      * @return 包含新增成功后类别DTO的统一响应
      */
     @PostMapping("/add")
-    public ResponseEntity<ResponseResult> addCategory(CategoryDTO categoryDTO) {
+    public ResponseEntity<ResponseResult<CategoryDTO>> addCategory(CategoryDTO categoryDTO) {
         try {
             CategoryDTO addedCategory = categoryService.addCategory(categoryDTO);
             addedCategory.setIconFile(null);
+            ResponseResult<CategoryDTO> result = ResponseResult.ok("类别新增成功");
             // 类别创建成功，返回HTTP 201 Created，业务码1，并携带新增类别数据
             return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(ResponseResult.ok("类别新增成功").setData(addedCategory));
+                    .body(result.setData(addedCategory));
         } catch (Exception e) {
             // 捕获异常，返回HTTP 500 Internal Server Error，业务码0，并提示错误信息
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -53,10 +55,11 @@ public class CategoryController {
      * @return 包含所有类别DTO列表的统一响应
      */
     @GetMapping("/all")
-    public ResponseEntity<ResponseResult> getAllCategories() {
+    public ResponseEntity<ResponseResult<List<CategoryDTO>>> getAllCategories() {
         List<CategoryDTO> categories = categoryService.getAllCategories(CATEGORY_STATUS_NORMAL);
+        ResponseResult<List<CategoryDTO>> result = ResponseResult.ok("查询所有类别成功");
         // 成功时，返回HTTP 200 OK，业务码1，并携带类别列表数据
-        return ResponseEntity.ok(ResponseResult.ok("查询所有类别成功").setData(categories));
+        return ResponseEntity.ok(result.setData(categories));
     }
 
     /**
@@ -67,7 +70,7 @@ public class CategoryController {
      * @return 操作结果的统一响应
      */
     @PutMapping("/{categoryId}/{status}")
-    public ResponseEntity<ResponseResult> setCategoryStatus(@PathVariable("categoryId") Long categoryId, @PathVariable("status") Integer status) {
+    public ResponseEntity<ResponseResult<Void>> setCategoryStatus(@PathVariable("categoryId") Long categoryId, @PathVariable("status") Integer status) {
         boolean success = categoryService.setCategoryStatusToHidden(categoryId, status);
         if (success) {
             // 设置成功，返回HTTP 200 OK，业务码1
@@ -88,7 +91,7 @@ public class CategoryController {
      * @return 包含更新成功后类别DTO的统一响应
      */
     @PutMapping("/{categoryId}")
-    public ResponseEntity<ResponseResult> updateCategory(@PathVariable("categoryId") Long categoryId, CategoryDTO categoryDTO) {
+    public ResponseEntity<ResponseResult<CategoryDTO>> updateCategory(@PathVariable("categoryId") Long categoryId, CategoryDTO categoryDTO) {
         if (!categoryId.equals(categoryDTO.getCategoryId())) {
             // 请求路径ID与DTO中的ID不一致，返回HTTP 400 Bad Request，业务码0
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -96,8 +99,9 @@ public class CategoryController {
         }
         try {
             CategoryDTO updatedCategory = categoryService.updateCategory(categoryDTO);
+            ResponseResult<CategoryDTO> result = ResponseResult.ok("类别更新成功");
             // 更新成功，返回HTTP 200 OK，业务码1，并携带更新后的类别数据
-            return ResponseEntity.ok(ResponseResult.ok("类别更新成功").setData(updatedCategory));
+            return ResponseEntity.ok(result.setData(updatedCategory));
         } catch (IllegalArgumentException e) {
             // 参数非法（例如类别ID为空），返回HTTP 400 Bad Request，业务码0
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -117,12 +121,14 @@ public class CategoryController {
      * @return 包含类别DTO的统一响应
      */
     @GetMapping("/{categoryId}")
-    public ResponseEntity<ResponseResult> getCategoryById(@PathVariable("categoryId") Long categoryId) {
+    public ResponseEntity<ResponseResult<CategoryDTO>> getCategoryById(@PathVariable("categoryId") Long categoryId) {
         CategoryDTO categoryDTO = categoryService.getCategoryById(categoryId);
         if (categoryDTO != null) {
             categoryDTO.setIconFile(null);
+            ResponseResult<CategoryDTO> result = ResponseResult.ok("查询成功");
+
             // 找到类别，返回HTTP 200 OK，业务码1，并携带类别数据
-            return ResponseEntity.ok(ResponseResult.ok("查询成功").setData(categoryDTO));
+            return ResponseEntity.ok(result.setData(categoryDTO));
         } else {
             // 未找到类别，返回HTTP 404 Not Found，业务码0，并提示错误信息
             return ResponseEntity.status(HttpStatus.NOT_FOUND)

@@ -11,6 +11,10 @@ import com.lightning.web.api.FileUploadApi;
 import com.lightning.web.api.IdGeneratorApi;
 import com.lightning.web.bean.ProductDTO;
 import com.lightning.web.bean.ResponseResult;
+import lombok.AllArgsConstructor;
+import lombok.extern.java.Log;
+import org.redisson.api.RBloomFilter;
+import org.redisson.api.RedissonClient;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -21,8 +25,13 @@ import org.springframework.web.multipart.MultipartFile;
 import java.math.BigDecimal;
 import java.util.List;
 
+@Log
 @Service
+@AllArgsConstructor
 public class ProductServiceImpl implements ProductService {
+
+    private final RedissonClient redissonClient;
+    private final String BLOOM_FILTER_KEY = "bloom:product";
 
     @Autowired
     private ProductMapper productMapper;
@@ -94,7 +103,7 @@ public class ProductServiceImpl implements ProductService {
      * @return 特价商品列表
      */
     @Override
-    public IPage<ProductDTO> getSpecialOfferProducts( ProductQueryVO queryVO ) {
+    public IPage<ProductDTO> getSpecialOfferProducts(ProductQueryVO queryVO) {
         // 创建分页对象
         Page<Product> page = new Page<>(queryVO.getCurrent(), queryVO.getSize());
         // 使用MyBatis-Plus的QueryWrapper构建查询条件
@@ -126,41 +135,20 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional // 开启事务
     public ProductDTO addProduct(ProductDTO productDTO) {
-        ResponseResult rr = this.idGeneratorApi.getNextId();
-        if (rr.getCode() != 1) {
-            throw new RuntimeException("商品ID生成失败");
-        }
-        Long productId = Long.parseLong(rr.getData().toString());
+        // 生成商品ID
+        Long productId = generateProductId();
         productDTO.setProductId(productId);
 
-        ResponseResult rr2 = this.fileUploadApi.upload(new MultipartFile[]{productDTO.getMainImageFile()});
-        if (rr2.getCode() != 1) {
-            throw new RuntimeException("商品主图片上传失败");
-        }
-        List<String> mainImages = (List<String>) rr2.getData();
-        productDTO.setMainImage(mainImages.get(0));
+        // 处理主图上传
+        processMainImage(productDTO);
 
-        ResponseResult rr3 = this.fileUploadApi.upload(productDTO.getSubImageFiles());
-        List<String> subImages = (List<String>) rr3.getData();
-        StringBuilder uploadedSubImages = new StringBuilder();
-        for (String imgData : subImages) {
-            if (StringUtils.hasText(imgData)) {
-                uploadedSubImages.append(imgData).append(",");
-            }
-        }
-        if (uploadedSubImages.length() > 0) {
-            uploadedSubImages.setLength(uploadedSubImages.length() - 1); // 移除最后一个逗号
-        }
-        productDTO.setSubImages(uploadedSubImages.toString());
+        // 处理副图上传
+        processSubImages(productDTO);
 
-        if (productDTO.getProductStatus() == null) {
-            productDTO.setProductStatus(1); // 默认上架
-        }
+        // 设置默认值
+        setDefaultValues(productDTO);
 
-        if (productDTO.getPrice() == null) {
-            productDTO.setPrice(BigDecimal.ZERO);
-        }
-
+        // 保存商品
         Product product = new Product();
         BeanUtils.copyProperties(productDTO, product);
 
@@ -168,6 +156,8 @@ public class ProductServiceImpl implements ProductService {
         if (result <= 0) {
             throw new RuntimeException("商品上架失败");
         }
+
+        addBloomFilterElement(productId);
 
         BeanUtils.copyProperties(product, productDTO);
 
@@ -183,6 +173,10 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional
     public boolean delistProduct(Long productId) {
+        if (productId == null || isBloomFilterContains(productId)) {
+            throw new IllegalArgumentException("商品ID为空或不存在，无法下架");
+        }
+
         // 构建更新条件，只更新状态
         LambdaUpdateWrapper<Product> updateWrapper = new LambdaUpdateWrapper<>();
         updateWrapper.eq(Product::getProductId, productId)
@@ -201,34 +195,18 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional
     public ProductDTO updateProduct(ProductDTO productDTO) {
-        if (productDTO.getProductId() == null) {
-            throw new IllegalArgumentException("商品ID不能为空，无法更新");
+        if (productDTO.getProductId() == null || isBloomFilterContains(productDTO.getProductId())) {
+            throw new IllegalArgumentException("商品ID为空或不存在，无法更新");
         }
 
+        // 处理主图上传（如果有新图片）
         if (productDTO.getMainImageFile() != null) {
-            ResponseResult rr2 = this.fileUploadApi.upload(new MultipartFile[]{productDTO.getMainImageFile()});
-            if (rr2.getCode() != 1) {
-                throw new RuntimeException("商品主图片上传失败");
-            }
-            List<String> mainImages = (List<String>) rr2.getData();
-            productDTO.setMainImage(mainImages.get(0));
+            processMainImage(productDTO);
         }
 
+        // 处理副图上传（如果有新图片）
         if (productDTO.getSubImageFiles() != null && productDTO.getSubImageFiles().length > 0) {
-            // 假设subImages是逗号分隔的图片数据，这里需要循环上传
-            MultipartFile[] subImageFiles = productDTO.getSubImageFiles();
-            ResponseResult rr3 = this.fileUploadApi.upload(subImageFiles);
-            List<String> subImages = (List<String>) rr3.getData();
-            StringBuilder uploadedSubImages = new StringBuilder();
-            for (String imgData : subImages) {
-                if (StringUtils.hasText(imgData)) {
-                    uploadedSubImages.append(imgData).append(",");
-                }
-            }
-            if (uploadedSubImages.length() > 0) {
-                uploadedSubImages.setLength(uploadedSubImages.length() - 1); // 移除最后一个逗号
-            }
-            productDTO.setSubImages(uploadedSubImages.toString());
+            processSubImages(productDTO);
         }
 
         Product product = new Product();
@@ -252,12 +230,98 @@ public class ProductServiceImpl implements ProductService {
      */
     @Override
     public ProductDTO getProductById(Long productId) {
+        if (isBloomFilterContains(productId)) {
+            log.warning("布隆过滤器拦截：productId 不存在 -> " + productId);
+            return null;
+        }
+
         Product product = productMapper.selectById(productId);
         if (product == null) {
             return null;
         }
         ProductDTO dto = new ProductDTO();
         BeanUtils.copyProperties(product, dto);
+
         return dto;
+    }
+
+    @Override
+    public void addBloomFilter(Long productId){
+        addBloomFilterElement(productId);
+    }
+
+    public boolean isBloomFilterContains(Long productId) {
+        RBloomFilter<Long> bloomFilter = redissonClient.getBloomFilter(BLOOM_FILTER_KEY);
+        return !bloomFilter.contains(productId);
+    }
+
+    private void addBloomFilterElement(Long productId) {
+        RBloomFilter<Long> bloomFilter = redissonClient.getBloomFilter(BLOOM_FILTER_KEY);
+        if (!bloomFilter.isExists()) {
+            bloomFilter.tryInit(10000L, 0.01);
+        }
+        bloomFilter.add(productId);
+    }
+
+    /**
+     * 生成商品ID
+     *
+     * @return 生成的商品ID
+     */
+    private Long generateProductId() {
+        ResponseResult<Long> rr = this.idGeneratorApi.getNextId();
+        if (rr.getCode() != 1) {
+            throw new RuntimeException("商品ID生成失败");
+        }
+        return rr.getData();
+    }
+
+    /**
+     * 处理主图上传
+     *
+     * @param productDTO 商品DTO
+     */
+    private void processMainImage(ProductDTO productDTO) {
+        ResponseResult<List<String>> rr = this.fileUploadApi.upload(new MultipartFile[]{productDTO.getMainImageFile()});
+        if (rr.getCode() != 1) {
+            throw new RuntimeException("商品主图片上传失败");
+        }
+        List<String> mainImages = rr.getData();
+        productDTO.setMainImage(mainImages.get(0));
+    }
+
+    /**
+     * 处理副图上传
+     *
+     * @param productDTO 商品DTO
+     */
+    private void processSubImages(ProductDTO productDTO) {
+        ResponseResult<List<String>> rr = this.fileUploadApi.upload(productDTO.getSubImageFiles());
+        List<String> subImages = rr.getData();
+        StringBuilder uploadedSubImages = new StringBuilder();
+        for (String imgData : subImages) {
+            if (StringUtils.hasText(imgData)) {
+                uploadedSubImages.append(imgData).append(",");
+            }
+        }
+        if (uploadedSubImages.length() > 0) {
+            uploadedSubImages.setLength(uploadedSubImages.length() - 1); // 移除最后一个逗号
+        }
+        productDTO.setSubImages(uploadedSubImages.toString());
+    }
+
+    /**
+     * 设置商品默认值
+     *
+     * @param productDTO 商品DTO
+     */
+    private void setDefaultValues(ProductDTO productDTO) {
+        if (productDTO.getProductStatus() == null) {
+            productDTO.setProductStatus(1); // 默认上架
+        }
+
+        if (productDTO.getPrice() == null) {
+            productDTO.setPrice(BigDecimal.ZERO);
+        }
     }
 }

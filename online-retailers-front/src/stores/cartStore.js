@@ -1,11 +1,11 @@
 import { defineStore } from 'pinia';
-import { getCartList } from '@/api/CartApi'; // 假设你有一个获取完整购物车列表的API
+import { getCartList } from '@/api/CartApi';
 
 export const useCartStore = defineStore('cart', {
     state: () => ({
-        items: [], // 存储购物车商品列表
+        items: [], // 购物车商品列表
         count: 0,  // 购物车商品总数量（或总品类数量）
-        totalAmount: 0, // 如果需要，也可以在这里存储总金额
+        totalAmount: 0, // 总金额
     }),
     actions: {
         // 设置购物车商品列表

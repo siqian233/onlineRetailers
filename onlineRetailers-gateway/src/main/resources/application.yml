@@ -18,6 +18,11 @@ spring:
           predicates:
             - Path=/product/**
 
+        - id: user
+          uri: lb://user
+          predicates:
+            - Path=/auth/**
+
         - id: fileUpload
           uri: lb://fileUpload
           predicates:

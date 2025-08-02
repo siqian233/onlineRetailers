@@ -20,14 +20,14 @@ public interface CategoryService {
      * 根据状态查询所有类别
      * @return 所有类别DTO的列表
      */
-    public List<CategoryDTO> getAllCategories(Integer categoryStatus);
+    List<CategoryDTO> getAllCategories(Integer categoryStatus);
 
     /**
      * 修改类别状态
      * @param categoryId 类别ID
      * @return 是否设置成功
      */
-    public boolean setCategoryStatusToHidden(Long categoryId, Integer categoryStatus);
+    boolean setCategoryStatusToHidden(Long categoryId, Integer categoryStatus);
 
     /**
      * 更新类别信息

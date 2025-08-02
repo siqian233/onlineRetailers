@@ -1,6 +1,6 @@
 package com.lightning.web;
 
-import com.lightning.service.UserService;
+import com.lightning.service.UserServiceImpl;
 import com.lightning.web.bean.UserDTO;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -19,10 +19,10 @@ import java.util.Optional;
 @RequestMapping("/users") // 所有用户管理相关的接口都以 /users 开头
 public class UserController {
 
-    private final UserService userService;
+    private final UserServiceImpl userServiceImpl;
 
-    public UserController(UserService userService) {
-        this.userService = userService;
+    public UserController(UserServiceImpl userServiceImpl) {
+        this.userServiceImpl = userServiceImpl;
     }
 
     /**
@@ -33,7 +33,7 @@ public class UserController {
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<UserDTO>> getAllUsers() {
-        List<UserDTO> users = userService.getAllUsers();
+        List<UserDTO> users = userServiceImpl.getAllUsers();
         return ResponseEntity.ok(users);
     }
 
@@ -44,7 +44,7 @@ public class UserController {
      */
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN') or #id == authentication.principal")
-    public ResponseEntity<UserDTO> getUserById(@PathVariable Long id) {
+    public ResponseEntity<UserDTO> getUserById(@PathVariable("id") Long id) {
         // 获取当前认证用户的ID (从 Gateway 传递的 X-User-ID 头中获取)
         String currentUserId = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
@@ -54,7 +54,7 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build(); // 403 Forbidden
         }
 
-        Optional<UserDTO> user = userService.getUserById(id);
+        Optional<UserDTO> user = userServiceImpl.getUserById(id);
         return user.map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build()); // 404 Not Found
     }
@@ -66,7 +66,7 @@ public class UserController {
      */
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN') or #id == authentication.principal")
-    public ResponseEntity<UserDTO> updateUser(@PathVariable Long id, @Valid @RequestBody UserDTO userDTO) {
+    public ResponseEntity<UserDTO> updateUser(@PathVariable("id") Long id, @Valid @RequestBody UserDTO userDTO) {
         // 获取当前认证用户的ID (从 Gateway 传递的 X-User-ID 头中获取)
         String currentUserId = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
@@ -77,7 +77,7 @@ public class UserController {
         }
 
         try {
-            UserDTO updatedUser = userService.updateUser(id, userDTO);
+            UserDTO updatedUser = userServiceImpl.updateUser(id, userDTO);
             return ResponseEntity.ok(updatedUser);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(null); // 400 Bad Request
